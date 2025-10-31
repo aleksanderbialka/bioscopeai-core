@@ -192,3 +192,6 @@ __marimo__/
 
 # MacOS
 .DS_Store
+
+# Configuration files
+bioscopeai-core-config.yaml
