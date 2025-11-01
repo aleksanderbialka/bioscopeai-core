@@ -18,7 +18,8 @@ def _get_yaml_path() -> str:
 
 class AppSettings(BaseSettings):
     DEBUG: bool = False
-    LOG_LEVEL: str = "info"
+    LOG_LEVEL: str = "INFO"
+    LOG_FILE_LEVEL: str = "DEBUG"
     PROJECT_NAME: str = "BioScopeAI Core"
     PROJECT_VERSION: str = "0.0.1"
     BACKEND_CORS_ORIGINS: str | list[str]

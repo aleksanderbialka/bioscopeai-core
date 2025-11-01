@@ -8,7 +8,7 @@ from loguru import logger
 from starlette.types import Lifespan
 
 from bioscopeai_core.app.api import api_router
-from bioscopeai_core.app.core.config import settings
+from bioscopeai_core.app.core import settings, setup_logger
 
 from .db import close_db, init_db
 
@@ -40,7 +40,7 @@ def create_app(lifespan: Lifespan) -> FastAPI:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Lifespan context manager for startup and shutdown events."""
-    logger.info("Starting up application...")
+    setup_logger()
     await init_db()
     yield
     logger.info("Shutting down application...")
