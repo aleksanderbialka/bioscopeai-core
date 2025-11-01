@@ -12,7 +12,7 @@ ROOT_DIR = Path(__file__).parent.parent.parent.parent
 def _get_yaml_path() -> str:
     config_path = Path("/etc/bioscopeai-core-config.yaml")
     if not config_path.exists():
-        config_path = ROOT_DIR / "bioscopeai-core-config.yaml"
+        config_path = ROOT_DIR / "docs/bioscopeai-core-config.yaml"
     return str(config_path)
 
 
