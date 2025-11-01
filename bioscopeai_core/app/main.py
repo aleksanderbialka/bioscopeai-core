@@ -4,17 +4,24 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 from starlette.types import Lifespan
 
 from bioscopeai_core.app.api import api_router
 from bioscopeai_core.app.core.config import settings
 
+from .db import close_db, init_db
+
 
 def create_app(lifespan: Lifespan) -> FastAPI:
+    """Create and configure the FastAPI application."""
     app = FastAPI(
         debug=settings.app.DEBUG,
         title=settings.app.PROJECT_NAME,
         version=settings.app.PROJECT_VERSION,
+        openapi_url="/api/openapi.json",
+        docs_url="/api/docs",
+        redoc_url="/api/redoc",
         lifespan=lifespan,
     )
 
@@ -33,7 +40,11 @@ def create_app(lifespan: Lifespan) -> FastAPI:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Lifespan context manager for startup and shutdown events."""
+    logger.info("Starting up application...")
+    await init_db()
     yield
+    logger.info("Shutting down application...")
+    await close_db()
 
 
 app: FastAPI = create_app(lifespan=lifespan)

@@ -144,6 +144,8 @@ ignore = ["E741", "S4", "COM812", "RUF012", "RUF001"]
 
 [tool.ruff.lint.per-file-ignores]
 "test_*.py" = ["S101"]
+"migrations/**/*.py" = ["ALL"]
+"migrations/*.py" = ["ALL"]
 
 [tool.ruff.lint.flake8-bandit]
 check-typed-exception = true
@@ -159,3 +161,8 @@ max-complexity = 30
 ignore-overlong-task-comments = true
 max-doc-length = 88
 max-line-length = 100
+
+[tool.aerich]
+tortoise_orm = "bioscopeai_core.app.db.init_db.TORTOISE_ORM"
+location = "./migrations"
+src_folder = "./."
