@@ -126,6 +126,7 @@ activemq-data/
 
 # Environments
 .env
+.env.postgres
 .envrc
 .venv
 env/
@@ -195,3 +196,6 @@ __marimo__/
 
 # Configuration files
 bioscopeai-core-config.yaml
+
+# Docker
+docker-compose.yml

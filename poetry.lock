@@ -1498,6 +1498,21 @@ pytest = ">=8.4.2"
 testing = ["covdefaults (>=2.3)", "coverage (>=7.10.7)", "pytest-mock (>=3.15.1)"]
 
 [[package]]
+name = "pytest-github-actions-annotate-failures"
+version = "0.3.0"
+description = "pytest plugin to annotate failed tests with a workflow command for GitHub Actions"
+optional = false
+python-versions = ">=3.8"
+groups = ["test"]
+files = [
+    {file = "pytest_github_actions_annotate_failures-0.3.0-py3-none-any.whl", hash = "sha256:41ea558ba10c332c0bfc053daeee0c85187507b2034e990f21e4f7e5fef044cf"},
+    {file = "pytest_github_actions_annotate_failures-0.3.0.tar.gz", hash = "sha256:d4c3177c98046c3900a7f8ddebb22ea54b9f6822201b5d3ab8fcdea51e010db7"},
+]
+
+[package.dependencies]
+pytest = ">=6.0.0"
+
+[[package]]
 name = "pytest-html"
 version = "4.1.1"
 description = "pytest plugin for generating HTML reports"
