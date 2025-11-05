@@ -6,7 +6,7 @@ from tortoise import fields
 from tortoise.models import Model
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
 class UserRole(StrEnum):
@@ -16,6 +16,20 @@ class UserRole(StrEnum):
     RESEARCHER = "researcher"
     ANALYST = "analyst"
     VIEWER = "viewer"
+
+    # Define role hierarchy
+    @property
+    def level(self) -> int:
+        levels: dict[UserRole, int] = {
+            UserRole.ADMIN: 4,
+            UserRole.RESEARCHER: 3,
+            UserRole.ANALYST: 2,
+            UserRole.VIEWER: 1,
+        }
+        return levels[self]
+
+    def has_at_least(self, required: "UserRole") -> bool:
+        return self.level >= required.level
 
 
 class UserStatus(StrEnum):
@@ -27,7 +41,7 @@ class UserStatus(StrEnum):
     PENDING = "pending"
 
 
-class User(Model):  # type: ignore[misc]
+class User(Model):
     """User model for authentication and authorization."""
 
     id = fields.UUIDField(pk=True)
@@ -77,6 +91,10 @@ class User(Model):  # type: ignore[misc]
     def full_name(self) -> str:
         """Get user's full name."""
         return f"{self.first_name} {self.last_name}"
+
+    def has_role(self, required: UserRole) -> bool:
+        """Check if user has the required role or higher."""
+        return self.role.has_at_least(required)
 
     async def set_password(self, password: str) -> None:
         """Set hashed password."""
