@@ -30,6 +30,10 @@ def hash_refresh_token(raw: str) -> str:
 
 
 async def obtain_token_pair(user: User) -> tuple[str, str]:
+    """
+    Generates and stores a new refresh token, returning a pair of access and
+    refresh tokens.
+    """
     access = create_access_token(str(user.id), user.role.value)
     raw_refresh = generate_refresh_token()
     token_hash = hash_refresh_token(raw_refresh)
@@ -45,6 +49,7 @@ def verify_refresh_token(raw: str, hashed: str) -> bool:
 
 
 async def rotate_refresh_token(old_raw: str) -> tuple[str, str]:
+    """ "Rotate (revoke and issue new) refresh token."""
     hashed = hash_refresh_token(old_raw)
     obj = await RefreshToken.get_or_none(token_hash=hashed).prefetch_related("user")
 
@@ -63,9 +68,6 @@ async def rotate_refresh_token(old_raw: str) -> tuple[str, str]:
     return access, new_refresh
 
 
-async def revoke_refresh(raw: str) -> None:
-    hashed = hash_refresh_token(raw)
-    obj = await RefreshToken.get_or_none(token_hash=hashed)
-    if obj:
-        obj.revoked = True
-        await obj.save(update_fields=["revoked"])
+async def revoke_refresh(refresh_token: str) -> None:
+    hashed = hash_refresh_token(refresh_token)
+    await RefreshToken.filter(token_hash=hashed).update(revoked=True)

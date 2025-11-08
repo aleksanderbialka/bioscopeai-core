@@ -92,6 +92,21 @@ class User(Model):
         """Get user's full name."""
         return f"{self.first_name} {self.last_name}"
 
+    @classmethod
+    async def create_user(
+        cls, email: str, username: str, first_name: str, last_name: str, password: str
+    ) -> "User":
+        user = cls(
+            email=email,
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            status=UserStatus.ACTIVE,
+        )
+        await user.set_password(password)
+        await user.save()
+        return user
+
     def has_role(self, required: UserRole) -> bool:
         """Check if user has the required role or higher."""
         return self.role.has_at_least(required)

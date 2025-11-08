@@ -15,6 +15,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 async def get_user_from_jwt(token: str = Depends(dependency=oauth2_scheme)) -> User:
+    """Decode JWT token and return the associated user."""
     try:
         payload = jwt.decode(token, settings.auth.PUBLIC_KEY, algorithms=ALGORITHM)
         user_id = payload.get("sub")
@@ -35,6 +36,7 @@ async def get_user_from_jwt(token: str = Depends(dependency=oauth2_scheme)) -> U
 
 
 async def verify_login(email: str, password: str) -> User:
+    """Verify user credentials and return the user if valid."""
     user: User | None = await User.get_or_none(email=email)
     if not user or not await user.verify_password(password) or not user.is_active:
         raise HTTPException(
@@ -44,6 +46,11 @@ async def verify_login(email: str, password: str) -> User:
 
 
 def require_role(required_role: str) -> Callable[..., User]:
+    """Dependency to verify that the user has the required role.
+    Returns the user if the role requirement is met.
+    Raises 403 Forbidden otherwise.
+    """
+
     def dependency(user: Annotated[User, Depends(get_user_from_jwt)]) -> User:
         if not user.has_role(UserRole(required_role)):
             raise HTTPException(
