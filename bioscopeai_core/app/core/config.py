@@ -18,8 +18,9 @@ def _get_yaml_path() -> str:
 
 class AppSettings(BaseSettings):
     DEBUG: bool = False
-    LOG_LEVEL: str = "INFO"
-    LOG_FILE_LEVEL: str = "DEBUG"
+    LOG_LEVEL: str = "info"
+    LOG_FILE_LEVEL: str = "debug"
+    LOG_FILE_PATH: str = "/var/log/supervisor/core.log"
     PROJECT_NAME: str = "BioScopeAI Core"
     PROJECT_VERSION: str = "0.0.1"
     BACKEND_CORS_ORIGINS: str | list[str]
@@ -51,10 +52,18 @@ class SentrySettings(BaseSettings):
     SENTRY_DSN: SecretStr | None = None
 
 
+class AuthSettings(BaseSettings):
+    ACCESS_TOKEN_TTL_MINUTES: int = 60 * 24  # 1 day
+    REFRESH_TOKEN_TTL_MINUTES: int = 60 * 24 * 7  # 7 days
+    PUBLIC_KEY: str
+    PRIVATE_KEY: SecretStr
+
+
 class Settings(BaseSettings):
     app: AppSettings
     database: DatabaseSettings
     sentry: SentrySettings
+    auth: AuthSettings
 
     model_config = SettingsConfigDict(
         yaml_file=_get_yaml_path(),
