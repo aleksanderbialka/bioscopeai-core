@@ -44,10 +44,6 @@ async def obtain_token_pair(user: User) -> tuple[str, str]:
     return access, raw_refresh
 
 
-def verify_refresh_token(raw: str, hashed: str) -> bool:
-    return hash_refresh_token(raw) == hashed
-
-
 async def rotate_refresh_token(old_raw: str) -> tuple[str, str]:
     """ "Rotate (revoke and issue new) refresh token."""
     hashed = hash_refresh_token(old_raw)

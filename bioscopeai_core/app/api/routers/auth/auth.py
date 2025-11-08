@@ -37,6 +37,7 @@ async def register(register_in: RegisterIn) -> dict[str, str]:
 @auth_router.post("/login", response_model=TokenOut)
 async def login(login_in: LoginIn, response: Response) -> TokenOut:
     user = await verify_login(login_in.email, login_in.password)
+    await user.update_last_login()
     access, refresh_raw = await obtain_token_pair(user=user)
     response.set_cookie(
         key="refresh_token",
