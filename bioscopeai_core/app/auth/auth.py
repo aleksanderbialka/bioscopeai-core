@@ -4,14 +4,12 @@ from datetime import datetime, timedelta, UTC
 
 from fastapi import HTTPException, status
 from jose import jwt
-from passlib.context import CryptContext
 
 from bioscopeai_core.app.core.config import settings
 from bioscopeai_core.app.models import RefreshToken, User
 
 
 ALGORITHM = "RS256"
-refresh_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
 def create_access_token(sub: str, role: str) -> str:

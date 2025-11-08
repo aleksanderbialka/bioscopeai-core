@@ -19,12 +19,18 @@ async def get_user_from_jwt(token: str = Depends(dependency=oauth2_scheme)) -> U
         payload = jwt.decode(token, settings.auth.PUBLIC_KEY, algorithms=ALGORITHM)
         user_id = payload.get("sub")
         if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+            )
     except JWTError as e:
-        raise HTTPException(status_code=401, detail="Invalid token") from e
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        ) from e
     user = await User.get_or_none(id=user_id)
     if not user or not user.is_active:
-        raise HTTPException(status_code=401, detail="User disabled")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User disabled"
+        )
     return user  # type: ignore[no-any-return]
 
 
