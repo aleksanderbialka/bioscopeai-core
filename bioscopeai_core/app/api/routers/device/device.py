@@ -1,5 +1,6 @@
 from datetime import datetime, UTC
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -47,7 +48,7 @@ async def list_devices(
     status_code=status.HTTP_200_OK,
 )
 async def get_device(
-    device_id: str,
+    device_id: UUID,
     user: Annotated[User, Depends(require_role(UserRole.ANALYST.value))],
     device_serializer: Annotated[DeviceSerializer, Depends(get_device_serializer)],
     device_crud: Annotated[DeviceCRUD, Depends(get_device_crud)],
@@ -78,7 +79,7 @@ async def register_device(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_device(
-    device_id: str,
+    device_id: UUID,
     user: Annotated[User, Depends(require_role(UserRole.ADMIN.value))],
     device_crud: Annotated[DeviceCRUD, Depends(get_device_crud)],
 ) -> None:
@@ -93,7 +94,7 @@ async def delete_device(
     status_code=status.HTTP_200_OK,
 )
 async def update_device(
-    device_id: str,
+    device_id: UUID,
     device_in: DeviceUpdate,
     user: Annotated[User, Depends(require_role(UserRole.ADMIN.value))],
     device_serializer: Annotated[DeviceSerializer, Depends(get_device_serializer)],
@@ -113,7 +114,7 @@ async def update_device(
     status_code=status.HTTP_200_OK,
 )
 async def update_device_status(
-    device_id: str,
+    device_id: UUID,
     status_in: DeviceStatusUpdate,
     user: Annotated[User, Depends(require_role(UserRole.ADMIN.value))],
     device_crud: Annotated[DeviceCRUD, Depends(get_device_crud)],

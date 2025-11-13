@@ -1,12 +1,9 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import Annotated, TYPE_CHECKING
+from uuid import UUID
 
 
 if TYPE_CHECKING:
     from bioscopeai_core.app.models.dataset import Dataset
-
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -63,7 +60,7 @@ async def create_dataset(
     status_code=status.HTTP_200_OK,
 )
 async def get_dataset(
-    dataset_id: str,
+    dataset_id: UUID,
     user: Annotated[User, Depends(require_role(UserRole.ANALYST.value))],
     dataset_crud: Annotated[DatasetCRUD, Depends(get_dataset_crud)],
     dataset_serializer: Annotated[DatasetSerializer, Depends(get_dataset_serializer)],
@@ -80,7 +77,7 @@ async def get_dataset(
     status_code=status.HTTP_200_OK,
 )
 async def update_dataset(
-    dataset_id: str,
+    dataset_id: UUID,
     dataset_in: DatasetUpdate,
     user: Annotated[User, Depends(require_role(UserRole.ANALYST.value))],
     dataset_crud: Annotated[DatasetCRUD, Depends(get_dataset_crud)],
@@ -97,7 +94,7 @@ async def update_dataset(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_dataset(
-    dataset_id: str,
+    dataset_id: UUID,
     user: Annotated[User, Depends(require_role(UserRole.ANALYST.value))],
     dataset_crud: Annotated[DatasetCRUD, Depends(get_dataset_crud)],
 ) -> None:

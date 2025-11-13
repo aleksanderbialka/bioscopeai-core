@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -24,14 +25,14 @@ class DatasetUpdate(BaseModel):
 class DatasetMinimalOut(BaseModel):
     """Minimal info (e.g. in dropdowns, after creation)."""
 
-    id: str
+    id: UUID
     name: str
 
 
 class DatasetOut(DatasetBase):
     """Full dataset representation."""
 
-    id: str
+    id: UUID
     owner_username: str
     created_at: datetime
 

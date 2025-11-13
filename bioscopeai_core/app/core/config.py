@@ -59,11 +59,19 @@ class AuthSettings(BaseSettings):
     PRIVATE_KEY: SecretStr
 
 
+class ImageSettings(BaseSettings):
+    UPLOAD_DIR: str
+    ALLOWED_MIME: set[str]
+    ALLOWED_EXT: set[str] = {".jpg", ".jpeg", ".png"}
+    MAX_FILE_SIZE: int = 10 * 1024 * 1024
+
+
 class Settings(BaseSettings):
     app: AppSettings
     database: DatabaseSettings
     sentry: SentrySettings
     auth: AuthSettings
+    image: ImageSettings
 
     model_config = SettingsConfigDict(
         yaml_file=_get_yaml_path(),

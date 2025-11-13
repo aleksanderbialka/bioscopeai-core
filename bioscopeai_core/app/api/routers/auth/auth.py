@@ -1,4 +1,7 @@
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.security import OAuth2PasswordRequestForm
 
 from bioscopeai_core.app.auth import (
     obtain_token_pair,
@@ -78,3 +81,25 @@ async def logout(request: Request, response: Response) -> Response:
     response.delete_cookie("refresh_token")
     response.status_code = status.HTTP_204_NO_CONTENT
     return response
+
+
+@auth_router.post("/login-swagger", response_model=TokenOut)
+async def login_swagger(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    response: Response,
+) -> TokenOut:
+    """
+    Login endpoint for Swagger OAuth2 (uses form-data instead of JSON).
+    """
+    user = await verify_login(form_data.username, form_data.password)
+    await user.update_last_login()
+    access, refresh_raw = await obtain_token_pair(user=user)
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_raw,
+        httponly=True,
+        secure=not settings.app.DEBUG,
+        samesite="strict",
+        max_age=settings.auth.REFRESH_TOKEN_TTL_MINUTES * 60,
+    )
+    return TokenOut(access_token=access, token_type="bearer")  # noqa: S106

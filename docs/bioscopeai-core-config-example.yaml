@@ -28,3 +28,14 @@ auth:
   PRIVATE_KEY: |
     -----BEGIN PRIVATE KEY-----
     -----END PRIVATE KEY-----
+
+image:
+  UPLOAD_DIR: ""
+  ALLOWED_MIME:
+    - "image/jpeg"
+    - "image/png"
+  ALLOWED_EXT:
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+  MAX_FILE_SIZE: 10485760  # 10 MB

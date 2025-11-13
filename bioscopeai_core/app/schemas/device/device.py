@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -19,7 +20,7 @@ class DeviceCreate(DeviceBase):
 class DeviceOut(DeviceBase):
     """Full response (GET/list)"""
 
-    id: str
+    id: UUID
     is_online: bool
     last_seen: datetime | None = None
     registered_at: datetime
@@ -28,7 +29,7 @@ class DeviceOut(DeviceBase):
 class DeviceMinimalOut(BaseModel):
     """Minimal response (e.g., after creation)"""
 
-    id: str
+    id: UUID
     name: str
 
 

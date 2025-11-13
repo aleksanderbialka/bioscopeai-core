@@ -1,4 +1,5 @@
 from typing import cast
+from uuid import UUID
 
 from bioscopeai_core.app.crud.base import BaseCRUD
 from bioscopeai_core.app.models.device import Device
@@ -22,7 +23,7 @@ class DeviceCRUD(BaseCRUD[Device]):
         return cast("Device", await self.model.create(**device_in.model_dump()))
 
     async def update_device(
-        self, device_id: str, device_in: DeviceUpdate
+        self, device_id: UUID, device_in: DeviceUpdate
     ) -> Device | None:
         device: Device | None = await self.model.get_or_none(id=device_id)
         if not device:

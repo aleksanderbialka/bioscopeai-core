@@ -1,4 +1,5 @@
 from typing import cast
+from uuid import UUID
 
 from fastapi import HTTPException, status
 from loguru import logger
@@ -15,7 +16,7 @@ class DatasetCRUD(BaseCRUD[Dataset]):
         qs = self.model.filter(owner=user)
         return cast("list[Dataset]", await qs)
 
-    async def get_by_id_for_user(self, dataset_id: str, user: User) -> Dataset | None:
+    async def get_by_id_for_user(self, dataset_id: UUID, user: User) -> Dataset | None:
         dataset = await self.model.get_or_none(id=dataset_id, owner=user)
         return cast("Dataset | None", dataset)
 
@@ -27,7 +28,7 @@ class DatasetCRUD(BaseCRUD[Dataset]):
         return cast("Dataset", obj)
 
     async def update_dataset(
-        self, dataset_id: str, dataset_in: DatasetUpdate, user: User
+        self, dataset_id: UUID, dataset_in: DatasetUpdate, user: User
     ) -> Dataset | None:
         dataset = await self.model.get_or_none(id=dataset_id, owner=user)
         if not dataset:
@@ -41,7 +42,7 @@ class DatasetCRUD(BaseCRUD[Dataset]):
         await dataset.refresh_from_db()
         return cast("Dataset", dataset)
 
-    async def delete_by_id_for_user(self, obj_id: str, user: User) -> bool:
+    async def delete_by_id_for_user(self, obj_id: UUID, user: User) -> bool:
         dataset = await self.model.get_or_none(id=obj_id)
         if not dataset:
             logger.info(
