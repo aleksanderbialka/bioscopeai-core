@@ -11,7 +11,7 @@ from bioscopeai_core.app.models import User, UserRole
 from .auth import ALGORITHM
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login-swagger")
 
 
 async def get_user_from_jwt(token: str = Depends(dependency=oauth2_scheme)) -> User:

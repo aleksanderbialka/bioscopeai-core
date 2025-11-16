@@ -10,7 +10,9 @@ pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
 class UserRole(StrEnum):
-    """User roles in the system."""
+    """User roles in the system with hierarchy
+    ADMIN > RESEARCHER > ANALYST > VIEWER
+    """
 
     ADMIN = "admin"
     RESEARCHER = "researcher"
