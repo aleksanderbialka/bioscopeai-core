@@ -1,8 +1,6 @@
 from typing import Annotated, TYPE_CHECKING
 from uuid import UUID
 
-from bioscopeai_core.app.models.dataset.dataset import Dataset
-
 
 if TYPE_CHECKING:
     from bioscopeai_core.app.models.dataset import Dataset
