@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from loguru import logger
 
 from bioscopeai_core.app.crud.base import BaseCRUD
-from bioscopeai_core.app.models import Dataset, User, UserRole
+from bioscopeai_core.app.models import Dataset, User
 from bioscopeai_core.app.schemas.dataset import DatasetCreate, DatasetUpdate
 
 
@@ -57,7 +57,7 @@ class DatasetCRUD(BaseCRUD[Dataset]):
                 status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found"
             )
 
-        if dataset.owner_id != user.id and user.role != UserRole.ADMIN.value:
+        if dataset.owner_id != user.id and not user.is_admin:
             logger.warning(
                 f"User {user.id} attempted to delete dataset {obj_id} without permission"
             )

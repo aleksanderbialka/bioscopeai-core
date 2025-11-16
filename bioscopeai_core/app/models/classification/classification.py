@@ -19,7 +19,7 @@ class Classification(models.Model):
         "models.Dataset", related_name="classifications", null=True
     )
     model_name = fields.CharField(max_length=100)
-    status: ClassificationStatus = fields.CharEnumField(
+    status = fields.CharEnumField(
         ClassificationStatus, default=ClassificationStatus.PENDING
     )
     created_by = fields.ForeignKeyField("models.User", related_name="classifications")

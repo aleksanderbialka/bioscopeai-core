@@ -15,6 +15,9 @@ from bioscopeai_core.app.models import Dataset, Image
 from bioscopeai_core.app.schemas.image import ImageCreate, ImageUpdate
 
 
+ALLOWED_ORDER_FIELDS = {"uploaded_at", "filename", "created_at"}
+
+
 class ImageCRUD(BaseCRUD[Image]):
     model = Image
 
@@ -32,6 +35,9 @@ class ImageCRUD(BaseCRUD[Image]):
         page_size: int = 25,
     ) -> list[Image]:
         """Retrieve images with optional filtering, pagination, and sorting."""
+        order_field = order_by.lstrip("-")
+        if order_field not in ALLOWED_ORDER_FIELDS:
+            raise HTTPException(status_code=400, detail="Invalid order_by field")
 
         filters = {
             "dataset_id": dataset_id,
@@ -46,9 +52,9 @@ class ImageCRUD(BaseCRUD[Image]):
         filters = {k: v for k, v in filters.items() if v is not None}
 
         query = self.model.filter(**filters).order_by(order_by)
-        offset = (page - 1) * page_size
-        query = query.offset(offset).limit(page_size)
-        return cast("list[Image]", await query)
+        offset: int = (page - 1) * page_size
+        images: list[Image] = await query.offset(offset).limit(page_size)
+        return images
 
     async def create_image(
         self, image_in: ImageCreate, uploaded_by_id: UUID, uploaded_file: UploadFile
@@ -69,11 +75,14 @@ class ImageCRUD(BaseCRUD[Image]):
             await anyio.Path(str(dataset_dir)).mkdir(exist_ok=True, parents=True)
             filename = uploaded_file.filename or f"{uuid.uuid4()}"
             filepath = str(dataset_dir / filename)
-            await self._check_file_exists(filepath)
-            async with await anyio.open_file(filepath, "wb") as f:
+            async with await anyio.open_file(filepath, "x+b") as f:
                 await f.write(await uploaded_file.read())
-        except HTTPException:
-            raise
+        except FileExistsError as e:
+            logger.exception(f"File already exists at {filepath}")
+            raise HTTPException(status_code=409, detail="File already exists") from e
+        except OSError as e:
+            logger.error(f"OS error while saving file: {e}")
+            raise HTTPException(status_code=500, detail="Filesystem error") from e
         except Exception as e:
             logger.exception("Failed to save uploaded file")
             raise HTTPException(status_code=500, detail="File upload failed") from e
@@ -95,7 +104,7 @@ class ImageCRUD(BaseCRUD[Image]):
                 await anyio.Path(filepath).unlink()
                 logger.info(f"Deleted orphaned file: {filepath}")
             except Exception as cleanup_exc:  # noqa: BLE001
-                logger.warning(
+                logger.exception(
                     f"Failed to delete orphaned file {filepath}: {cleanup_exc}"
                 )
             raise HTTPException(
@@ -146,13 +155,6 @@ class ImageCRUD(BaseCRUD[Image]):
         if len(contents) > settings.image.MAX_FILE_SIZE:
             raise HTTPException(status_code=400, detail="File too large")
         await uploaded_file.seek(0)
-
-    @staticmethod
-    async def _check_file_exists(filepath: str) -> None:
-        """Check if a file exists at the given filepath."""
-        if await anyio.Path(filepath).exists():
-            logger.warning(f"File already exists at {filepath}")
-            raise HTTPException(status_code=409, detail="File already exists")
 
     @staticmethod
     def _clean_name(name: str) -> str:

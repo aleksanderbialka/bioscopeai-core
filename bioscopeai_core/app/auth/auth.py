@@ -45,7 +45,7 @@ async def obtain_token_pair(user: User) -> tuple[str, str]:
 
 
 async def rotate_refresh_token(old_raw: str) -> tuple[str, str]:
-    """ "Rotate (revoke and issue new) refresh token."""
+    """Rotate (revoke and issue new) refresh token."""
     hashed = hash_refresh_token(old_raw)
     obj = await RefreshToken.get_or_none(token_hash=hashed).prefetch_related("user")
 

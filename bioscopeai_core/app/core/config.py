@@ -20,7 +20,7 @@ class AppSettings(BaseSettings):
     DEBUG: bool = False
     LOG_LEVEL: str = "info"
     LOG_FILE_LEVEL: str = "debug"
-    LOG_FILE_PATH: str = "/var/log/supervisor/core.log"
+    LOG_FILE_PATH: str = "core.log"
     PROJECT_NAME: str = "BioScopeAI Core"
     PROJECT_VERSION: str = "0.0.1"
     BACKEND_CORS_ORIGINS: str | list[str]
@@ -53,7 +53,7 @@ class SentrySettings(BaseSettings):
 
 
 class AuthSettings(BaseSettings):
-    ACCESS_TOKEN_TTL_MINUTES: int = 60 * 24  # 1 day
+    ACCESS_TOKEN_TTL_MINUTES: int = 15 * 15  # 15 minutes
     REFRESH_TOKEN_TTL_MINUTES: int = 60 * 24 * 7  # 7 days
     PUBLIC_KEY: str
     PRIVATE_KEY: SecretStr
