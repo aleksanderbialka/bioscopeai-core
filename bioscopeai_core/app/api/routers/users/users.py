@@ -15,7 +15,7 @@ async def get_current_user(
     user: Annotated[User, Depends(require_role(UserRole.VIEWER.value))],
 ) -> UserOut:
     return UserOut(
-        id=str(user.id),
+        id=user.id,
         email=user.email,
         username=user.username,
         first_name=user.first_name,

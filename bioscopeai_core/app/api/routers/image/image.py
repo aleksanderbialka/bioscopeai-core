@@ -63,7 +63,7 @@ async def list_images(
         Query(
             description="Sort by field (e.g. 'uploaded_at', '-uploaded_at', 'filename')",
         ),
-    ] = "uploaded_at",
+    ] = "-uploaded_at",
 ) -> list[ImageOut]:
     """List images with optional filters (dataset, device, uploader, analyzed state),
     date range, full-text search, pagination, and sorting."""

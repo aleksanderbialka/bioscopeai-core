@@ -37,7 +37,7 @@ class ImageCRUD(BaseCRUD[Image]):
             "dataset_id": dataset_id,
             "device_id": device_id,
             "uploaded_by_id": uploaded_by,
-            "analyzed": analyzed if analyzed is not None else None,
+            "analyzed": analyzed,
             "uploaded_at__gte": created_from,
             "uploaded_at__lte": created_to,
             "filename__icontains": q,
@@ -56,9 +56,13 @@ class ImageCRUD(BaseCRUD[Image]):
         """Create a new image record and save the uploaded file."""
 
         await self._validate_file(uploaded_file)
+        # Save to dataset subdirectory for better organization
         try:
-            # Save to dataset subdirectory for better organization
             dataset: Dataset = await Dataset.get(id=image_in.dataset_id).only("name")
+        except Exception as e:
+            logger.exception("Failed to retrieve dataset for image upload")
+            raise HTTPException(status_code=400, detail="Invalid dataset ID") from e
+        try:
             dataset_dir = Path(settings.image.UPLOAD_DIR) / self._clean_name(
                 dataset.name
             )
@@ -68,6 +72,8 @@ class ImageCRUD(BaseCRUD[Image]):
             await self._check_file_exists(filepath)
             async with await anyio.open_file(filepath, "wb") as f:
                 await f.write(await uploaded_file.read())
+        except HTTPException:
+            raise
         except Exception as e:
             logger.exception("Failed to save uploaded file")
             raise HTTPException(status_code=500, detail="File upload failed") from e
@@ -85,6 +91,13 @@ class ImageCRUD(BaseCRUD[Image]):
             logger.info(f"Image record created in DB: {obj.id}")
         except Exception as e:
             logger.exception("Failed to create image record in database")
+            try:
+                await anyio.Path(filepath).unlink()
+                logger.info(f"Deleted orphaned file: {filepath}")
+            except Exception as cleanup_exc:  # noqa: BLE001
+                logger.warning(
+                    f"Failed to delete orphaned file {filepath}: {cleanup_exc}"
+                )
             raise HTTPException(
                 status_code=500, detail="Image record creation failed"
             ) from e
@@ -128,7 +141,7 @@ class ImageCRUD(BaseCRUD[Image]):
             raise HTTPException(status_code=400, detail="Invalid file extension")
         # Validate size and empty file
         contents = await uploaded_file.read()
-        if len(contents) == 0:
+        if not contents:
             raise HTTPException(status_code=400, detail="File is empty")
         if len(contents) > settings.image.MAX_FILE_SIZE:
             raise HTTPException(status_code=400, detail="File too large")
@@ -138,12 +151,15 @@ class ImageCRUD(BaseCRUD[Image]):
     async def _check_file_exists(filepath: str) -> None:
         """Check if a file exists at the given filepath."""
         if await anyio.Path(filepath).exists():
+            logger.warning(f"File already exists at {filepath}")
             raise HTTPException(status_code=409, detail="File already exists")
 
     @staticmethod
     def _clean_name(name: str) -> str:
-        """Cleans the dataset name by removing spaces and trimming."""
-        return re.sub(r"\s+", "", name.strip())  # Remove all whitespace
+        """
+        Cleans the dataset name by replacing whitespace with underscores and trimming.
+        """
+        return re.sub(r"\s+", "_", name.strip())
 
 
 def get_image_crud() -> ImageCRUD:

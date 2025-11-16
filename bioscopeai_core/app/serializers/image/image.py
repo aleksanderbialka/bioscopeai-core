@@ -11,7 +11,7 @@ class ImageSerializer:
             analyzed=image.analyzed,
             dataset_id=image.dataset_id,
             uploaded_by_id=image.uploaded_by_id,
-            device_id=image.device_id or None,
+            device_id=image.device_id,
             filepath=image.filepath,
             uploaded_at=image.uploaded_at,
         )
