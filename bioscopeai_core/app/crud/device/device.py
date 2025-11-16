@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Any, cast
 from uuid import UUID
 
 from bioscopeai_core.app.crud.base import BaseCRUD
@@ -12,12 +12,13 @@ class DeviceCRUD(BaseCRUD[Device]):
     async def get_filtered_devices(
         self, is_online: bool | None = None, location: str | None = None
     ) -> list[Device]:
-        query = self.model.all()
-        if is_online:
-            query = query.filter(is_online=is_online)
-        if location:
-            query = query.filter(location=location)
-        return cast("list[Device]", await query)
+        filters: dict[str, Any] = {
+            "is_online": is_online,
+            "location": location,
+        }
+        filters = {k: v for k, v in filters.items() if v is not None}
+        devices: list[Device] = await self.model.filter(**filters)
+        return devices
 
     async def create_device(self, device_in: DeviceCreate) -> Device:
         return cast("Device", await self.model.create(**device_in.model_dump()))

@@ -1,4 +1,3 @@
-from typing import cast
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -13,24 +12,30 @@ class DatasetCRUD(BaseCRUD[Dataset]):
     model = Dataset
 
     async def get_user_datasets(self, user: User) -> list[Dataset]:
-        qs = self.model.filter(owner=user)
-        return cast("list[Dataset]", await qs)
+        datasets: list[Dataset] = await self.model.filter(owner=user).prefetch_related(
+            "owner"
+        )
+        return datasets
 
     async def get_by_id_for_user(self, dataset_id: UUID, user: User) -> Dataset | None:
-        dataset = await self.model.get_or_none(id=dataset_id, owner=user)
-        return cast("Dataset | None", dataset)
+        dataset: Dataset | None = await self.model.get_or_none(
+            id=dataset_id, owner=user
+        ).prefetch_related("owner")
+        return dataset
 
     async def create_for_user(self, dataset_in: DatasetCreate, user: User) -> Dataset:
-        obj = await self.model.create(
+        obj: Dataset = await self.model.create(
             **dataset_in.model_dump(),
             owner=user,
         )
-        return cast("Dataset", obj)
+        return obj
 
     async def update_dataset(
         self, dataset_id: UUID, dataset_in: DatasetUpdate, user: User
     ) -> Dataset | None:
-        dataset = await self.model.get_or_none(id=dataset_id, owner=user)
+        dataset: Dataset | None = await self.model.get_or_none(
+            id=dataset_id, owner=user
+        ).prefetch_related("owner")
         if not dataset:
             return None
 
@@ -40,10 +45,10 @@ class DatasetCRUD(BaseCRUD[Dataset]):
 
         await dataset.save()
         await dataset.refresh_from_db()
-        return cast("Dataset", dataset)
+        return dataset
 
     async def delete_by_id_for_user(self, obj_id: UUID, user: User) -> bool:
-        dataset = await self.model.get_or_none(id=obj_id)
+        dataset: Dataset | None = await self.model.get_or_none(id=obj_id)
         if not dataset:
             logger.info(
                 f"Dataset {obj_id} not found for deletion by user {user.username}"

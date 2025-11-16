@@ -6,7 +6,7 @@ class DeviceSerializer:
     @staticmethod
     def device_to_out(device: Device) -> DeviceOut:
         return DeviceOut(
-            id=str(device.id),
+            id=device.id,
             name=device.name,
             hostname=device.hostname,
             location=device.location,
@@ -16,13 +16,14 @@ class DeviceSerializer:
             registered_at=device.registered_at,
         )
 
-    def device_to_out_list(self, devices: list[Device]) -> list[DeviceOut]:
-        return [self.device_to_out(device) for device in devices]
+    @staticmethod
+    def device_to_out_list(devices: list[Device]) -> list[DeviceOut]:
+        return [DeviceSerializer.device_to_out(device) for device in devices]
 
     @staticmethod
     def device_to_out_minimal(device: Device) -> DeviceMinimalOut:
         return DeviceMinimalOut(
-            id=str(device.id),
+            id=device.id,
             name=device.name,
         )
 

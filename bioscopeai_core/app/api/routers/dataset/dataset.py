@@ -1,6 +1,8 @@
 from typing import Annotated, TYPE_CHECKING
 from uuid import UUID
 
+from bioscopeai_core.app.models.dataset.dataset import Dataset
+
 
 if TYPE_CHECKING:
     from bioscopeai_core.app.models.dataset import Dataset
@@ -36,7 +38,7 @@ async def list_datasets(
     dataset_serializer: Annotated[DatasetSerializer, Depends(get_dataset_serializer)],
 ) -> list[DatasetOut]:
     datasets: list[Dataset] = await dataset_crud.get_user_datasets(user)
-    return dataset_serializer.to_out_list(datasets, user)
+    return dataset_serializer.to_out_list(datasets)
 
 
 @dataset_router.post(
@@ -65,10 +67,10 @@ async def get_dataset(
     dataset_crud: Annotated[DatasetCRUD, Depends(get_dataset_crud)],
     dataset_serializer: Annotated[DatasetSerializer, Depends(get_dataset_serializer)],
 ) -> DatasetOut:
-    dataset = await dataset_crud.get_by_id_for_user(dataset_id, user)
+    dataset: Dataset | None = await dataset_crud.get_by_id_for_user(dataset_id, user)
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
-    return dataset_serializer.to_out(dataset, user)
+    return dataset_serializer.to_out(dataset)
 
 
 @dataset_router.patch(
@@ -83,10 +85,12 @@ async def update_dataset(
     dataset_crud: Annotated[DatasetCRUD, Depends(get_dataset_crud)],
     dataset_serializer: Annotated[DatasetSerializer, Depends(get_dataset_serializer)],
 ) -> DatasetOut:
-    updated = await dataset_crud.update_dataset(dataset_id, dataset_in, user)
+    updated: Dataset | None = await dataset_crud.update_dataset(
+        dataset_id, dataset_in, user
+    )
     if not updated:
         raise HTTPException(status_code=404, detail="Dataset not found")
-    return dataset_serializer.to_out(updated, user)
+    return dataset_serializer.to_out(updated)
 
 
 @dataset_router.delete(
@@ -98,6 +102,4 @@ async def delete_dataset(
     user: Annotated[User, Depends(require_role(UserRole.ANALYST.value))],
     dataset_crud: Annotated[DatasetCRUD, Depends(get_dataset_crud)],
 ) -> None:
-    deleted = await dataset_crud.delete_by_id_for_user(dataset_id, user)
-    if not deleted:
-        raise HTTPException(status_code=404, detail="Dataset not found")
+    await dataset_crud.delete_by_id_for_user(dataset_id, user)
