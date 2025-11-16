@@ -6,16 +6,32 @@ from tortoise import fields
 from tortoise.models import Model
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
 class UserRole(StrEnum):
-    """User roles in the system."""
+    """User roles in the system with hierarchy
+    ADMIN > RESEARCHER > ANALYST > VIEWER
+    """
 
     ADMIN = "admin"
     RESEARCHER = "researcher"
     ANALYST = "analyst"
     VIEWER = "viewer"
+
+    # Define role hierarchy
+    @property
+    def level(self) -> int:
+        levels: dict[UserRole, int] = {
+            UserRole.ADMIN: 4,
+            UserRole.RESEARCHER: 3,
+            UserRole.ANALYST: 2,
+            UserRole.VIEWER: 1,
+        }
+        return levels[self]
+
+    def has_at_least(self, required: "UserRole") -> bool:
+        return self.level >= required.level
 
 
 class UserStatus(StrEnum):
@@ -27,7 +43,7 @@ class UserStatus(StrEnum):
     PENDING = "pending"
 
 
-class User(Model):  # type: ignore[misc]
+class User(Model):
     """User model for authentication and authorization."""
 
     id = fields.UUIDField(pk=True)
@@ -77,6 +93,25 @@ class User(Model):  # type: ignore[misc]
     def full_name(self) -> str:
         """Get user's full name."""
         return f"{self.first_name} {self.last_name}"
+
+    @classmethod
+    async def create_user(
+        cls, email: str, username: str, first_name: str, last_name: str, password: str
+    ) -> "User":
+        user = cls(
+            email=email,
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            status=UserStatus.ACTIVE,
+        )
+        await user.set_password(password)
+        await user.save()
+        return user
+
+    def has_role(self, required: UserRole) -> bool:
+        """Check if user has the required role or higher."""
+        return self.role.has_at_least(required)
 
     async def set_password(self, password: str) -> None:
         """Set hashed password."""

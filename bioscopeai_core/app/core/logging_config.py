@@ -24,11 +24,10 @@ def setup_logger() -> Logger:
         level=settings.app.LOG_LEVEL.upper(),
     )
     logger.add(
-        "/var/log/supervisor/core.log",
+        settings.app.LOG_FILE_PATH,
         rotation="10 MB",
         retention="7 days",
         compression="zip",
         level=settings.app.LOG_FILE_LEVEL.upper(),
     )
-    logger.info("Logger initialized -> /var/log/supervisor/core.log")
     return logger

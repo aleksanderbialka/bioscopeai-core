@@ -196,6 +196,7 @@ __marimo__/
 
 # Configuration files
 bioscopeai-core-config.yaml
+bioscopeai-postgres-config.yaml
 
 # Docker
 docker-compose.yml
