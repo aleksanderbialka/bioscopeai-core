@@ -2,6 +2,9 @@ from typing import Any
 from uuid import UUID
 
 from bioscopeai_core.app.crud.base import BaseCRUD
+from bioscopeai_core.app.kafka.producers.classification_producer import (
+    ClassificationJobProducer,
+)
 from bioscopeai_core.app.models.classification import (
     Classification,
     ClassificationStatus,
@@ -16,6 +19,7 @@ class ClassificationCRUD(BaseCRUD[Classification]):
         self,
         created_by_id: UUID,
         create_in: ClassificationCreate,
+        classification_job_producer: ClassificationJobProducer,
     ) -> Classification:
         obj: Classification = await self.model.create(
             dataset_id=create_in.dataset_id,
@@ -23,6 +27,17 @@ class ClassificationCRUD(BaseCRUD[Classification]):
             model_name=create_in.model_name,
             created_by_id=created_by_id,
             status=ClassificationStatus.PENDING,
+        )
+        await classification_job_producer.send_event(
+            device_id=str(created_by_id),
+            message={
+                "classification_id": str(obj.id),
+                "dataset_id": str(create_in.dataset_id)
+                if create_in.dataset_id
+                else None,
+                "image_id": str(create_in.image_id) if create_in.image_id else None,
+                "model_name": create_in.model_name or None,
+            },
         )
         return obj
 

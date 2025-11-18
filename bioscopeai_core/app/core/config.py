@@ -66,12 +66,33 @@ class ImageSettings(BaseSettings):
     MAX_FILE_SIZE: int = 10 * 1024 * 1024
 
 
+class KafkaSettings(BaseSettings):
+    BOOTSTRAP_SERVERS: str
+
+    # Topics and consumer group for classification jobs
+    CLASSIFICATION_JOBS_TOPIC: str = "classification-job"
+    CLASSIFICATION_RESULTS_TOPIC: str = "classification-result"
+    CLASSIFICATION_CONSUMER_GROUP: str = "classification-result-group"
+
+    # ---- SSL ---- #
+    SSL_ENABLED: bool = False
+    SSL_CAFILE: str | None = None
+    SSL_CERTFILE: str | None = None
+    SSL_KEYFILE: str | None = None
+    # ---- SASL ---- #
+    SASL_ENABLED: bool = False
+    SASL_USERNAME: str | None = None
+    SASL_PASSWORD: SecretStr | None = None
+    SASL_MECHANISM: str = "SCRAM-SHA-512"
+
+
 class Settings(BaseSettings):
     app: AppSettings
     database: DatabaseSettings
     sentry: SentrySettings
     auth: AuthSettings
     image: ImageSettings
+    kafka: KafkaSettings
 
     model_config = SettingsConfigDict(
         yaml_file=_get_yaml_path(),

@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from bioscopeai_core.app.auth.permissions import require_role
 from bioscopeai_core.app.crud.classification import (
@@ -30,6 +30,7 @@ classification_router = APIRouter()
     status_code=status.HTTP_201_CREATED,
 )
 async def run_classification(
+    request: Request,
     create_in: ClassificationCreate,
     user: Annotated[User, Depends(require_role(UserRole.ANALYST.value))],
     crud: Annotated[ClassificationCRUD, Depends(get_classification_crud)],
@@ -41,6 +42,7 @@ async def run_classification(
     Start a new classification job for a single image OR an entire dataset.
     Exactly ONE of image_id or dataset_id must be provided.
     """
+    classification_job_producer = request.app.state.classification_job_producer
     # validation — exactly one of image_id / dataset_id
     if bool(create_in.dataset_id) == bool(create_in.image_id):
         raise HTTPException(
@@ -50,7 +52,9 @@ async def run_classification(
 
     # Create job + emit event to Kafka
     job: Classification = await crud.create_job(
-        created_by_id=user.id, create_in=create_in
+        created_by_id=user.id,
+        create_in=create_in,
+        classification_job_producer=classification_job_producer,
     )
     return serializer.to_minimal(job)
 

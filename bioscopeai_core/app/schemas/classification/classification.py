@@ -15,7 +15,7 @@ class ClassificationCreate(BaseModel):
 
     dataset_id: UUID | None = None
     image_id: UUID | None = None
-    model_name: str
+    model_name: str | None = None
 
 
 class ClassificationOut(BaseModel):
