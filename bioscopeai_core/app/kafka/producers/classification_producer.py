@@ -29,3 +29,8 @@ class ClassificationJobProducer(BaseKafkaProducer):
             msg = "Producer is not initialized."
             logger.error(msg)
             raise RuntimeError(msg)
+
+
+def get_classification_producer() -> ClassificationJobProducer:
+    """Get the singleton instance of ClassificationJobProducer."""
+    return ClassificationJobProducer.get_instance()

@@ -10,10 +10,10 @@ from starlette.types import Lifespan
 from bioscopeai_core.app.api import api_router
 from bioscopeai_core.app.core import settings, setup_logger
 from bioscopeai_core.app.kafka.consumers.result_consumer import (
-    ClassificationResultConsumer,
+    get_classification_result_consumer,
 )
 from bioscopeai_core.app.kafka.producers.classification_producer import (
-    ClassificationJobProducer,
+    get_classification_producer,
 )
 
 from .db import close_db, init_db
@@ -46,17 +46,17 @@ def create_app(lifespan: Lifespan) -> FastAPI:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Lifespan context manager for startup and shutdown events."""
-    classification_job_producer = ClassificationJobProducer()
-    classification_result_consumer = ClassificationResultConsumer()
+    classification_job_producer = get_classification_producer()
+    classification_result_consumer = get_classification_result_consumer()
     setup_logger()
     await init_db()
     await classification_job_producer.initialize()
-    await classification_result_consumer.initialize()
-    app.state.classification_job_producer = classification_job_producer
-    app.state.classification_result_consumer = classification_result_consumer
+    await classification_result_consumer.start_consuming()
     logger.info("Application startup complete.")
     yield
     logger.info("Shutting down application...")
+    await classification_job_producer.shutdown()
+    await classification_result_consumer.stop_consuming()
     await close_db()
 
 

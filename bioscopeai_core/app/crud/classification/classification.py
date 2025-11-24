@@ -4,6 +4,7 @@ from uuid import UUID
 from bioscopeai_core.app.crud.base import BaseCRUD
 from bioscopeai_core.app.kafka.producers.classification_producer import (
     ClassificationJobProducer,
+    get_classification_producer,
 )
 from bioscopeai_core.app.models.classification import (
     Classification,
@@ -19,7 +20,6 @@ class ClassificationCRUD(BaseCRUD[Classification]):
         self,
         created_by_id: UUID,
         create_in: ClassificationCreate,
-        classification_job_producer: ClassificationJobProducer,
     ) -> Classification:
         obj: Classification = await self.model.create(
             dataset_id=create_in.dataset_id,
@@ -27,6 +27,9 @@ class ClassificationCRUD(BaseCRUD[Classification]):
             model_name=create_in.model_name,
             created_by_id=created_by_id,
             status=ClassificationStatus.PENDING,
+        )
+        classification_job_producer: ClassificationJobProducer = (
+            get_classification_producer()
         )
         await classification_job_producer.send_event(
             device_id=str(created_by_id),
@@ -43,15 +46,14 @@ class ClassificationCRUD(BaseCRUD[Classification]):
 
     async def set_status(
         self,
-        classification_id: UUID,
         status: ClassificationStatus,
+        classification_id: UUID | None = None,
     ) -> Classification | None:
         obj: Classification | None = await self.model.get_or_none(id=classification_id)
         if obj is None:
             return None
         obj.status = status
         await obj.save()
-        await obj.refresh_from_db()
 
         return obj
 
