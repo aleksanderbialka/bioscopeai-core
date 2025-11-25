@@ -1,10 +1,31 @@
-from bioscopeai_core.app.models.classification import ClassificationResult
+import json
+
+from loguru import logger
+
+from bioscopeai_core.app.models.classification.classification_result import (
+    ClassificationResult,
+)
 from bioscopeai_core.app.schemas.classification import (
+    ClassificationResultCreate,
     ClassificationResultOut,
 )
 
 
 class ClassificationResultSerializer:
+    """Serializer for classification result events."""
+
+    @staticmethod
+    def create_from_event(
+        classification_result_event: str,
+    ) -> ClassificationResultCreate:
+        try:
+            classification_result_data = json.loads(classification_result_event)
+        except json.JSONDecodeError as e:
+            msg = "Invalid JSON format"
+            logger.exception(msg)
+            raise ValueError(msg) from e
+        return ClassificationResultCreate.model_validate(classification_result_data)
+
     @staticmethod
     def to_out(obj: ClassificationResult) -> ClassificationResultOut:
         return ClassificationResultOut(

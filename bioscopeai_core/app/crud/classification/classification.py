@@ -1,7 +1,13 @@
 from typing import Any
 from uuid import UUID
 
+from loguru import logger
+
 from bioscopeai_core.app.crud.base import BaseCRUD
+from bioscopeai_core.app.kafka.producers.classification_producer import (
+    ClassificationJobProducer,
+    get_classification_producer,
+)
 from bioscopeai_core.app.models.classification import (
     Classification,
     ClassificationStatus,
@@ -24,19 +30,43 @@ class ClassificationCRUD(BaseCRUD[Classification]):
             created_by_id=created_by_id,
             status=ClassificationStatus.PENDING,
         )
+        classification_job_producer: ClassificationJobProducer = (
+            get_classification_producer()
+        )
+        try:
+            await classification_job_producer.send_event(
+                device_id=str(created_by_id),
+                message={
+                    "classification_id": str(obj.id),
+                    "dataset_id": str(create_in.dataset_id)
+                    if create_in.dataset_id
+                    else None,
+                    "image_id": str(create_in.image_id) if create_in.image_id else None,
+                    "model_name": create_in.model_name or None,
+                },
+            )
+        except Exception:
+            await self.set_status(
+                status=ClassificationStatus.FAILED,
+                classification_id=obj.id,
+            )
+            logger.exception(
+                f"Failed to send classification job to Kafka for classification ID {obj.id}"
+            )
+            raise
+
         return obj
 
     async def set_status(
         self,
-        classification_id: UUID,
         status: ClassificationStatus,
+        classification_id: UUID,
     ) -> Classification | None:
         obj: Classification | None = await self.model.get_or_none(id=classification_id)
         if obj is None:
             return None
         obj.status = status
         await obj.save()
-        await obj.refresh_from_db()
 
         return obj
 

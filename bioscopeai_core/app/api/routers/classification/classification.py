@@ -1,5 +1,10 @@
-from typing import Annotated
+from typing import Annotated, TYPE_CHECKING
 from uuid import UUID
+
+
+if TYPE_CHECKING:
+    from bioscopeai_core.app.models.classification.classification import Classification
+
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -9,7 +14,6 @@ from bioscopeai_core.app.crud.classification import (
     get_classification_crud,
 )
 from bioscopeai_core.app.models import User, UserRole
-from bioscopeai_core.app.models.classification.classification import Classification
 from bioscopeai_core.app.schemas.classification import (
     ClassificationCreate,
     ClassificationMinimalOut,
@@ -50,7 +54,8 @@ async def run_classification(
 
     # Create job + emit event to Kafka
     job: Classification = await crud.create_job(
-        created_by_id=user.id, create_in=create_in
+        created_by_id=user.id,
+        create_in=create_in,
     )
     return serializer.to_minimal(job)
 
