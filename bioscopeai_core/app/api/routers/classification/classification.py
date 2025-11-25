@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from bioscopeai_core.app.models.classification.classification import Classification
 
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from bioscopeai_core.app.auth.permissions import require_role
 from bioscopeai_core.app.crud.classification import (
@@ -34,7 +34,6 @@ classification_router = APIRouter()
     status_code=status.HTTP_201_CREATED,
 )
 async def run_classification(
-    request: Request,
     create_in: ClassificationCreate,
     user: Annotated[User, Depends(require_role(UserRole.ANALYST.value))],
     crud: Annotated[ClassificationCRUD, Depends(get_classification_crud)],

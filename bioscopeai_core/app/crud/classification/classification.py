@@ -1,6 +1,8 @@
 from typing import Any
 from uuid import UUID
 
+from loguru import logger
+
 from bioscopeai_core.app.crud.base import BaseCRUD
 from bioscopeai_core.app.kafka.producers.classification_producer import (
     ClassificationJobProducer,
@@ -31,23 +33,34 @@ class ClassificationCRUD(BaseCRUD[Classification]):
         classification_job_producer: ClassificationJobProducer = (
             get_classification_producer()
         )
-        await classification_job_producer.send_event(
-            device_id=str(created_by_id),
-            message={
-                "classification_id": str(obj.id),
-                "dataset_id": str(create_in.dataset_id)
-                if create_in.dataset_id
-                else None,
-                "image_id": str(create_in.image_id) if create_in.image_id else None,
-                "model_name": create_in.model_name or None,
-            },
-        )
+        try:
+            await classification_job_producer.send_event(
+                device_id=str(created_by_id),
+                message={
+                    "classification_id": str(obj.id),
+                    "dataset_id": str(create_in.dataset_id)
+                    if create_in.dataset_id
+                    else None,
+                    "image_id": str(create_in.image_id) if create_in.image_id else None,
+                    "model_name": create_in.model_name or None,
+                },
+            )
+        except Exception:
+            await self.set_status(
+                status=ClassificationStatus.FAILED,
+                classification_id=obj.id,
+            )
+            logger.exception(
+                f"Failed to send classification job to Kafka for classification ID {obj.id}"
+            )
+            raise
+
         return obj
 
     async def set_status(
         self,
         status: ClassificationStatus,
-        classification_id: UUID | None = None,
+        classification_id: UUID,
     ) -> Classification | None:
         obj: Classification | None = await self.model.get_or_none(id=classification_id)
         if obj is None:

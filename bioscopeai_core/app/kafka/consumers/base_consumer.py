@@ -113,30 +113,31 @@ class BaseKafkaConsumer(ABC):
 
     async def _consume_messages(self) -> AsyncGenerator[str]:
         """Internal loop for consuming messages."""
-        if self._consumer:
-            while not self._stop_event.is_set():
+        if not self._consumer:
+            logger.error("Consumer not initialized")
+            return
+        try:
+            async for _msg in self._consumer:
+                if self.should_stop_processing:
+                    break
                 try:
-                    async for _msg in self._consumer:
-                        if self.should_stop_processing:
-                            break
-                    try:
-                        message_content = _msg.value.decode("utf-8").strip()
-                        if message_content:
-                            logger.debug(
-                                f"Consumed message from topic {_msg.topic},"
-                                f" partition {_msg.partition},"
-                                f" offset {_msg.offset}: {message_content}"
-                            )
-                        yield message_content
-                    except UnicodeDecodeError:
-                        logger.exception("Failed to decode message")
-                        continue
-                    except Exception:  # noqa: BLE001
-                        logger.exception("Error processing raw message")
-                        continue
-                except Exception:
-                    logger.exception("Error while consuming messages")
-                    raise
+                    message_content = _msg.value.decode("utf-8").strip()
+                    if message_content:
+                        logger.debug(
+                            f"Consumed message from topic {_msg.topic},"
+                            f" partition {_msg.partition},"
+                            f" offset {_msg.offset}: {message_content}"
+                        )
+                    yield message_content
+                except UnicodeDecodeError:
+                    logger.exception("Failed to decode message")
+                    continue
+                except Exception:  # noqa: BLE001
+                    logger.exception("Error processing raw message")
+                    continue
+        except Exception:
+            logger.exception("Error while consuming messages")
+            raise
 
     async def _shutdown(self) -> None:
         """Shutdown connection if necessary"""

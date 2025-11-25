@@ -1,5 +1,4 @@
 import json
-from uuid import UUID
 
 from loguru import logger
 
@@ -13,21 +12,19 @@ from bioscopeai_core.app.schemas.classification import (
 
 
 class ClassificationResultSerializer:
+    """Serializer for classification result events."""
+
     @staticmethod
     def create_from_event(
         classification_result_event: str,
     ) -> ClassificationResultCreate:
         try:
             classification_result_data = json.loads(classification_result_event)
-        except json.JSONDecodeError:
-            logger.exception("Invalid JSON in message: %s", classification_result_event)
-        return ClassificationResultCreate(
-            image_id=UUID(classification_result_data.get("image_id")),
-            classification_id=UUID(classification_result_data.get("classification_id")),
-            label=classification_result_data.get("label"),
-            confidence=classification_result_data.get("confidence"),
-            model_name=classification_result_data.get("model_name"),
-        )
+        except json.JSONDecodeError as e:
+            msg = "Invalid JSON format"
+            logger.exception(msg)
+            raise ValueError(msg) from e
+        return ClassificationResultCreate.model_validate(classification_result_data)
 
     @staticmethod
     def to_out(obj: ClassificationResult) -> ClassificationResultOut:

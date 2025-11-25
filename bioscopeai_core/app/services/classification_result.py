@@ -42,20 +42,29 @@ class ClassificationResultService:
                     classification_result_event=classification_result_event
                 )
             )
+        except ValueError:
+            logger.exception(
+                f"Invalid classification result event: {classification_result_event}"
+            )
+            raise
+        else:
             logger.info(
                 f"Processing classification result: {classification_result.classification_id}"
             )
+        try:
             await self.classification_result_crud.create_result(
                 data=classification_result
             )
-            await self.classification_crud.set_status(
-                classification_id=classification_result.classification_id,
-                status=ClassificationStatus.COMPLETED,
-            )
-        except Exception:  # noqa: BLE001
+            if classification_result.classification_id is not None:
+                await self.classification_crud.set_status(
+                    classification_id=classification_result.classification_id,
+                    status=ClassificationStatus.COMPLETED,
+                )
+        except Exception:
             logger.exception(
                 f"Failed to process classification result: {classification_result_event}"
             )
+            raise
         else:
             logger.info(
                 "Completed processing classification result: "
