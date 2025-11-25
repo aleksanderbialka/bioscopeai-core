@@ -18,7 +18,7 @@ class Classification(models.Model):
     dataset = fields.ForeignKeyField(
         "models.Dataset", related_name="classifications", null=True
     )
-    model_name = fields.CharField(max_length=100)
+    model_name = fields.CharField(max_length=100, null=True)
     status = fields.CharEnumField(
         ClassificationStatus, default=ClassificationStatus.PENDING
     )
