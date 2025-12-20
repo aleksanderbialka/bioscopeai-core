@@ -135,6 +135,28 @@ class ImageCRUD(BaseCRUD[Image]):
 
         return cast("Image", image)
 
+    async def mark_as_analyzed(self, image_id: UUID) -> Image | None:
+        """Mark an image as analyzed."""
+
+        image = await self.model.get_or_none(id=image_id)
+        if not image:
+            logger.info(f"Image {image_id} not found to set as analyzed")
+            return None
+
+        image.analyzed = True
+
+        try:
+            await image.save()
+            await image.refresh_from_db()
+            logger.info(f"Image {image_id} marked as analyzed")
+        except Exception as e:
+            logger.exception("Failed to mark image as analyzed")
+            raise HTTPException(
+                status_code=500, detail="Setting image as analyzed failed"
+            ) from e
+
+        return cast("Image", image)
+
     @staticmethod
     async def _validate_file(uploaded_file: UploadFile) -> None:
         """Validate the uploaded file for MIME type, extension, and size."""

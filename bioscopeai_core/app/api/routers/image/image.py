@@ -170,7 +170,6 @@ async def delete_image(
 )
 async def get_image_file(
     image_id: UUID,
-    user: Annotated[User, Depends(require_role(UserRole.ANALYST.value))],
     image_crud: Annotated[ImageCRUD, Depends(get_image_crud)],
     download: Annotated[bool, Query(description="Force download of the file")] = False,
 ) -> FileResponse:
