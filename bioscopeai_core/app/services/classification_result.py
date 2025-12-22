@@ -13,6 +13,7 @@ from bioscopeai_core.app.crud.classification import (
     get_classification_crud,
     get_classification_result_crud,
 )
+from bioscopeai_core.app.crud.image import get_image_crud, ImageCRUD
 from bioscopeai_core.app.models.classification import ClassificationStatus
 from bioscopeai_core.app.serializers.classification.classification_result import (
     ClassificationResultSerializer,
@@ -31,6 +32,7 @@ class ClassificationResultService:
         self.classification_result_serializer: ClassificationResultSerializer = (
             get_classification_result_serializer()
         )
+        self.image_crud: ImageCRUD = get_image_crud()
 
     async def process_classification_result(
         self, classification_result_event: str
@@ -59,6 +61,9 @@ class ClassificationResultService:
                 await self.classification_crud.set_status(
                     classification_id=classification_result.classification_id,
                     status=ClassificationStatus.COMPLETED,
+                )
+                await self.image_crud.mark_as_analyzed(
+                    image_id=classification_result.image_id
                 )
         except Exception:
             logger.exception(
