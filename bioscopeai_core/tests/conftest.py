@@ -1,14 +1,18 @@
 """Pytest configuration and shared fixtures."""
 
+import os
 from collections.abc import AsyncGenerator
-from dataclasses import dataclass
 from datetime import datetime, timedelta, UTC
+from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
 
 from bioscopeai_core.app.models import RefreshToken, User
 from bioscopeai_core.app.models.users.user import UserRole, UserStatus
+
+# Set test config path before any imports of settings
+TEST_CONFIG_PATH = Path(__file__).parent / "test-config.yaml"
+os.environ["BIOSCOPEAI_CONFIG_PATH"] = str(TEST_CONFIG_PATH)
 
 
 TEST_PRIVATE_KEY = """-----BEGIN PRIVATE KEY-----
@@ -65,29 +69,12 @@ async def db() -> AsyncGenerator[None]:
     await Tortoise.close_connections()
 
 
-@dataclass
-class MockAuthSettings:
-    """Mock authentication settings."""
-
-    ACCESS_TOKEN_TTL_MINUTES: int = 15
-    REFRESH_TOKEN_TTL_MINUTES: int = 10080  # 7 days
-    PRIVATE_KEY: SecretStr = SecretStr(TEST_PRIVATE_KEY)
-    PUBLIC_KEY: str = TEST_PUBLIC_KEY
-
-
 @pytest.fixture
-def mock_auth_settings() -> MockAuthSettings:
-    """Mock authentication settings fixture."""
-    return MockAuthSettings()
+def mock_auth_settings():
+    """Get auth settings from YAML config."""
+    from bioscopeai_core.app.core.config import settings
 
-
-@pytest.fixture(autouse=True)
-def mock_settings(monkeypatch, mock_auth_settings: MockAuthSettings):
-    """Auto-patch settings for all tests."""
-    monkeypatch.setattr(
-        "bioscopeai_core.app.auth.auth.settings.auth", mock_auth_settings
-    )
-    return mock_auth_settings
+    return settings.auth
 
 
 class UserFactory:

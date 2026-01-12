@@ -1,0 +1,82 @@
+app:
+  DEBUG: true
+  LOG_LEVEL: "debug"
+  LOG_FILE_LEVEL: "debug"
+  LOG_FILE_PATH: ""
+  PROJECT_NAME: "BioScopeAI Core Tests"
+  PROJECT_VERSION: "0.0.1"
+  BACKEND_CORS_ORIGINS: ""
+  UVICORN_ADDRESS: "0.0.0.0"
+  UVICORN_PORT: 8000
+
+database:
+  POSTGRES_USER: "test"
+  POSTGRES_PASSWORD: "test"
+  POSTGRES_SERVER: "localhost"
+  POSTGRES_PORT: 5432
+  POSTGRES_DB: "test"
+
+sentry:
+  SENTRY_DSN: ""
+
+auth:
+  ACCESS_TOKEN_TTL_MINUTES: 15
+  REFRESH_TOKEN_TTL_MINUTES: 10080
+  PUBLIC_KEY: |
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvZDeVz+RNJzxvj34pgr0
+    UHW86sBFqRsBtLO/gjjp8mDZCDbDwzC4SpYw34JWvIYykJFg4qULVmABMGS9juuu
+    BYZaobm7+0gvmBNn0SkZBOUYqV+AixJHYx1Kp5Gr++ohf5h0xwE8mmf7l1suAwvN
+    G6vuAGDVKZhxZ8DYF3PonkMAQrfBcglL1Te9VMXb+zs+b8Wq44Xnopyob5C8tGKP
+    tHCvBZio+/E0eTlDHs1BGNtraMy7uyz3A5EFP1UJJWyiTkvj3GqDcE4tYHHybIGK
+    M2Afk5y3SElcieJrTsT+JTFMPiirRSyouXyRfSgbiPL/viLl0IDKZPqTV4+xSxx6
+    wwIDAQAB
+    -----END PUBLIC KEY-----
+  PRIVATE_KEY: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC9kN5XP5E0nPG+
+    PfimCvRQdbzqwEWpGwG0s7+COOnyYNkINsPDMLhKljDfgla8hjKQkWDipQtWYAEw
+    ZL2O664Fhlqhubv7SC+YE2fRKRkE5RipX4CLEkdjHUqnkav76iF/mHTHATyaZ/uX
+    Wy4DC80bq+4AYNUpmHFnwNgXc+ieQwBCt8FyCUvVN71Uxdv7Oz5vxarjheeinKhv
+    kLy0Yo+0cK8FmKj78TR5OUMezUEY22tozLu7LPcDkQU/VQklbKJOS+PcaoNwTi1g
+    cfJsgYozYB+TnLdISVyJ4mtOxP4lMUw+KKtFLKi5fJF9KBuI8v++IuXQgMpk+pNX
+    j7FLHHrDAgMBAAECggEAXVu/ZJC13od8twimMIAsmoOhqqtOo13dlTUBGA0XinsP
+    5++wsayI1pLpNupl9SrSNEikwnot/zgA3eh/QqfnaGkmsYdbgQGoDulfs67d139M
+    if2yvMsfxTxjy+r+HG7OWJyoxmlhg1m6mmwZWP6y4PHnoOAPmxCsqUBcLBC1e1sD
+    Aj9bzB+jxohPe5XqNFRWVzj9T5+0lxrMZMrsMTy9EmutxxINgFJ/LVLyeEDG47oh
+    StjQ6uBSjydQZFRWV5VZd4lzLTgV/k4r7tDMTqehs2yX9vgRo6WDbaGJEtpS4j2k
+    Vnq3r7pjlWa9LBUSdEi59QBiwpjL4WE3HgTr2+kcgQKBgQDewELweAWJ/yK+or/k
+    Lzsh6sZLPWFI60HHBSAtJLSKNpooyuQmgOlGS/FJ6BHsKLcsror8i+0FMEyiFI5m
+    9WMouvW/069KwWWS5sxQkVkMyF/4lqHDeoQLQYMo7YxwDQi1H8nyJCGSR5+xfPmt
+    +zmg6TYqFOwYpNTPZ6iBDnM8UwKBgQDZ3IpXoJ1ABsgCwdf7dZbit7ObWmd3OfIP
+    hHXyStugKgrvSQPaT+IVtZer92lz7kL6003OANMEQy7RKktS31PdaU7CO3e2xswY
+    a8bbUR4Ec+3h/KGK6zAVhFvoFV4zUh5SflmI2pgmBipEVCzKLw8kB3I9X+1JUmW4
+    xogW8cd50QKBgGVXIx0z/ZEiujPw50xxEH4FyeFBM5lxLqPU+SaQpHKdFNWqONIr
+    o/WPZ18wbbb7bxqs7h6nqlXJ+5NhtsewrERDirqTHBTul7+VsS6WceUW5FK8dSvx
+    +VEFpR5htJrl0yhUJhQ7y+o5G7YsHYvB2B4U+8d5bVBo7UjO6CKO6G5xAoGBAIix
+    d5vDiubBWn1gYsPD5AgcevTepEyKbvaNhfOgRG0Z9AJvLZusw44bgi7D7cZvmFcI
+    fajjm4LxJE7Y2qoEtfoWOPRlm5dy5FvuQ7cYDl1836ULfdBMAL9/bKsRvSk2PRBF
+    dqgHf69b7ukwZ2n0XOueQG+B4MBAktJ8vqamzSIBAoGBAIIWDMm5IVsKoLLwdyQi
+    mb29Q5RVOXm1JYOesOafO+SlDGQT70xId1MjKnLOiVE1eZlXCl2GdCApnZYxRqZa
+    Nzt08lzIi7WzgKDrAnpOwtu+IsQnj0/JN7zkPed1hfuYmziwHSn2EEnNPsdaRbKw
+    BxzL4tZU+GpG4VLazFXqjBVq
+    -----END PRIVATE KEY-----
+
+image:
+  UPLOAD_DIR: "/tmp/test_uploads"
+  ALLOWED_MIME:
+    - "image/jpeg"
+    - "image/png"
+  ALLOWED_EXT:
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+  MAX_FILE_SIZE: 10485760
+
+kafka:
+  BOOTSTRAP_SERVERS: "localhost:9092"
+  CLASSIFICATION_JOBS_TOPIC: "classification-job"
+  CLASSIFICATION_RESULTS_TOPIC: "classification-result"
+  CLASSIFICATION_CONSUMER_GROUP: "classification-result-group"
+  SSL_ENABLED: false
+  SASL_ENABLED: false
