@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,11 @@ ROOT_DIR = Path(__file__).parent.parent.parent.parent
 
 
 def _get_yaml_path() -> str:
+    # Check for test config path from environment variable
+    env_config_path = os.getenv("BIOSCOPEAI_CONFIG_PATH")
+    if env_config_path:
+        return env_config_path
+
     config_path = Path("/etc/bioscopeai-core-config.yaml")
     if not config_path.exists():
         config_path = ROOT_DIR / "docs/bioscopeai-core-config.yaml"

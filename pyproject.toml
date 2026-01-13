@@ -53,7 +53,8 @@ test = [
     "pytest-mypy (>=1.0.1,<2.0.0)",
     "pytest-xdist (>=3.8.0,<4.0.0)",
     "pytest-html (>=4.1.1,<5.0.0)",
-    "pytest-github-actions-annotate-failures (>=0.3.0,<0.4.0)"
+    "pytest-github-actions-annotate-failures (>=0.3.0,<0.4.0)",
+    "pytest-mock (>=3.15.1,<4.0.0)"
 ]
 
 # ######################## formatting and linting tools ########################
@@ -93,7 +94,7 @@ warn_redundant_casts = true
 disable_error_code = ["misc"]
 
 [[tool.mypy.overrides]]
-module = ["tests"]
+module = ["tests", "bioscopeai_core.tests.*"]
 ignore_errors = true
 implicit_reexport = true
 
@@ -105,14 +106,32 @@ omit = ["*/tests/*", "*/__init__.py"]
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-python_files = "tests.py test_*.py *_tests.py"
-python_functions = "test_*"
-addopts = "--cov=apps --cov-report=html --cov-report=term-missing"
+testpaths = ["bioscopeai_core/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "unit: Unit tests without database",
+    "integration: Integration tests with database",
+    "slow: Slow running tests"
+]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--strict-config",
+    "--tb=short",
+    "--cov=bioscopeai_core",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--disable-warnings"
+]
 
 
 # ################ ################ ruff configuration #################
 [tool.ruff]
-extend-exclude = ["__pycache__", "*/migrations/*"]
+extend-exclude = ["__pycache__", "*/migrations/*", "*/tests/*", "tests/*"]
 force-exclude = true
 namespace-packages = ["bioscopeai_core"]
 required-version = ">=0.14.2"
