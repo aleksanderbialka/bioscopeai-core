@@ -6,6 +6,9 @@ from datetime import datetime, timedelta, UTC
 from pathlib import Path
 
 import pytest
+from fastapi import FastAPI
+from httpx import AsyncClient, ASGITransport
+from tortoise import Tortoise
 
 from bioscopeai_core.app.models import RefreshToken, User
 from bioscopeai_core.app.models.users.user import UserRole, UserStatus
@@ -13,6 +16,8 @@ from bioscopeai_core.app.models.users.user import UserRole, UserStatus
 # Set test config path before any imports of settings
 TEST_CONFIG_PATH = Path(__file__).parent / "test-config.yaml"
 os.environ["BIOSCOPEAI_CONFIG_PATH"] = str(TEST_CONFIG_PATH)
+
+TEST_PASSWORD = "SecurePass123!"
 
 
 TEST_PRIVATE_KEY = """-----BEGIN PRIVATE KEY-----
@@ -57,7 +62,6 @@ wwIDAQAB
 
 @pytest.fixture(scope="function")
 async def db() -> AsyncGenerator[None]:
-    """Initialize isolated in-memory SQLite database for each test."""
     from tortoise import Tortoise
 
     await Tortoise.init(
@@ -71,14 +75,64 @@ async def db() -> AsyncGenerator[None]:
 
 @pytest.fixture
 def mock_auth_settings():
-    """Get auth settings from YAML config."""
     from bioscopeai_core.app.core.config import settings
 
     return settings.auth
 
 
+@pytest.fixture
+def test_app() -> FastAPI:
+    from bioscopeai_core.app.api import api_router
+
+    app = FastAPI()
+    app.include_router(api_router, prefix="/api")
+    return app
+
+
+@pytest.fixture
+async def api_client(test_app: FastAPI, db) -> AsyncGenerator[AsyncClient, None]:
+    transport = ASGITransport(app=test_app)
+    async with AsyncClient(
+        transport=transport, base_url="http://test", follow_redirects=False
+    ) as client:
+        yield client
+
+
+def create_auth_headers(user: User) -> dict[str, str]:
+    from bioscopeai_core.app.auth import create_access_token
+
+    token = create_access_token(user_id=str(user.id), role=user.role)
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def auth_headers(test_user: User) -> dict[str, str]:
+    return create_auth_headers(test_user)
+
+
+@pytest.fixture
+def admin_auth_headers(admin_user: User) -> dict[str, str]:
+    return create_auth_headers(admin_user)
+
+
+@pytest.fixture
+async def analyst_user() -> User:
+    return await User.create_user(
+        email="analyst@test.example.com",
+        username="analyst_test",
+        first_name="Test",
+        last_name="Analyst",
+        password=TEST_PASSWORD,
+        role=UserRole.ANALYST,
+    )
+
+
+@pytest.fixture
+def analyst_auth_headers(analyst_user: User) -> dict[str, str]:
+    return create_auth_headers(analyst_user)
+
+
 class UserFactory:
-    """Factory for creating test users with various configurations."""
 
     _counter = 0
 
@@ -90,7 +144,6 @@ class UserFactory:
         status: UserStatus = UserStatus.ACTIVE,
         **kwargs,
     ) -> User:
-        """Create test user with auto-generated email if not provided."""
         cls._counter += 1
         if email is None:
             email = f"user{cls._counter}@test.example.com"
@@ -110,13 +163,11 @@ class UserFactory:
 
 @pytest.fixture
 def user_factory() -> type[UserFactory]:
-    """User factory fixture."""
     return UserFactory
 
 
 @pytest.fixture
 async def test_user(db, user_factory: type[UserFactory]) -> User:
-    """Standard test user with RESEARCHER role."""
     return await user_factory.create(
         email="test@example.com",
         role=UserRole.RESEARCHER,
@@ -125,7 +176,6 @@ async def test_user(db, user_factory: type[UserFactory]) -> User:
 
 @pytest.fixture
 async def admin_user(db, user_factory: type[UserFactory]) -> User:
-    """Test admin user with elevated privileges."""
     return await user_factory.create(
         email="admin@example.com",
         first_name="Admin",
@@ -135,7 +185,6 @@ async def admin_user(db, user_factory: type[UserFactory]) -> User:
 
 @pytest.fixture
 async def viewer_user(db, user_factory: type[UserFactory]) -> User:
-    """Test user with minimal VIEWER permissions."""
     return await user_factory.create(
         email="viewer@example.com",
         role=UserRole.VIEWER,
@@ -144,7 +193,6 @@ async def viewer_user(db, user_factory: type[UserFactory]) -> User:
 
 @pytest.fixture
 async def inactive_user(db, user_factory: type[UserFactory]) -> User:
-    """Test user with INACTIVE status."""
     return await user_factory.create(
         email="inactive@example.com",
         status=UserStatus.INACTIVE,
@@ -152,7 +200,6 @@ async def inactive_user(db, user_factory: type[UserFactory]) -> User:
 
 
 class RefreshTokenFactory:
-    """Factory for creating refresh tokens with various states."""
 
     @staticmethod
     async def create(
@@ -161,7 +208,6 @@ class RefreshTokenFactory:
         revoked: bool = False,
         exp_delta: timedelta = timedelta(days=7),
     ) -> RefreshToken:
-        """Create refresh token with specified parameters."""
         return await RefreshToken.create(
             user=user,
             token_hash=token_hash,
@@ -172,55 +218,86 @@ class RefreshTokenFactory:
 
 @pytest.fixture
 def token_factory() -> type[RefreshTokenFactory]:
-    """Refresh token factory fixture."""
     return RefreshTokenFactory
+
+
+async def create_refresh_token_fixture(
+    user: User,
+    raw_token: str,
+    token_factory: type[RefreshTokenFactory],
+    **kwargs,
+) -> tuple[RefreshToken, str]:
+    from bioscopeai_core.app.auth.auth import hash_refresh_token
+
+    token_hash = hash_refresh_token(raw_token)
+    token = await token_factory.create(user=user, token_hash=token_hash, **kwargs)
+    return token, raw_token
 
 
 @pytest.fixture
 async def valid_refresh_token(
     test_user: User, token_factory: type[RefreshTokenFactory]
 ) -> tuple[RefreshToken, str]:
-    """Valid refresh token with raw value tuple."""
-    raw_token = "valid_test_token_12345"
-    from bioscopeai_core.app.auth.auth import hash_refresh_token
-
-    token_hash = hash_refresh_token(raw_token)
-    token = await token_factory.create(user=test_user, token_hash=token_hash)
-
-    return token, raw_token
+    return await create_refresh_token_fixture(
+        test_user, "valid_test_token_12345", token_factory
+    )
 
 
 @pytest.fixture
 async def expired_refresh_token(
     test_user: User, token_factory: type[RefreshTokenFactory]
 ) -> tuple[RefreshToken, str]:
-    """Expired refresh token with raw value tuple."""
-    raw_token = "expired_test_token_67890"
-    from bioscopeai_core.app.auth.auth import hash_refresh_token
-
-    token_hash = hash_refresh_token(raw_token)
-    token = await token_factory.create(
-        user=test_user,
-        token_hash=token_hash,
-        exp_delta=timedelta(days=-1),
+    return await create_refresh_token_fixture(
+        test_user, "expired_test_token_67890", token_factory, exp_delta=timedelta(days=-1)
     )
-
-    return token, raw_token
 
 
 @pytest.fixture
 async def revoked_refresh_token(
     test_user: User, token_factory: type[RefreshTokenFactory]
 ) -> tuple[RefreshToken, str]:
-    """Revoked refresh token with raw value tuple."""
-    raw_token = "revoked_test_token_abcde"
-    from bioscopeai_core.app.auth.auth import hash_refresh_token
-
-    token_hash = hash_refresh_token(raw_token)
-    token = await token_factory.create(
-        user=test_user,
-        token_hash=token_hash,
-        revoked=True,
+    return await create_refresh_token_fixture(
+        test_user, "revoked_test_token_abcde", token_factory, revoked=True
     )
 
-    return token, raw_token
+
+async def get_auth_token(api_client: AsyncClient, email: str, password: str) -> str:
+    response = await api_client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    return response.json()["access_token"]
+
+
+async def create_user_with_role(
+    email: str,
+    role: UserRole,
+    password: str = TEST_PASSWORD,
+    username: str | None = None,
+    first_name: str = "Test",
+    last_name: str = "User",
+) -> User:
+    user = await User.create_user(
+        email=email,
+        username=username or email.split("@")[0],
+        first_name=first_name,
+        last_name=last_name,
+        password=password,
+    )
+    user.role = role
+    await user.save()
+    return user
+
+
+async def create_analyst_user(email: str, password: str = TEST_PASSWORD) -> User:
+    return await create_user_with_role(email, UserRole.ANALYST, password, last_name="Analyst")
+
+
+async def create_admin_user(email: str, password: str = TEST_PASSWORD) -> User:
+    return await create_user_with_role(email, UserRole.ADMIN, password, first_name="Admin")
+
+
+async def create_test_user(
+    email: str, username: str, role: UserRole, password: str = TEST_PASSWORD
+) -> User:
+    return await create_user_with_role(email, role, password, username=username)

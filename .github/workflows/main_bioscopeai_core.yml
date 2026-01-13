@@ -1,4 +1,4 @@
-name: BioscopeAI Core CI/CD -- MAIN workflow 🦁
+name: BioscopeAI Core CI/CD -- MAIN workflow 🧪
 run-name: ${{ github.event.head_commit.message }} -- ${{ github.actor}} 🦁
 
 on:
@@ -14,7 +14,7 @@ on:
           - 'false'
 
   push:
-    branches: ["master", "dev", "tests"]
+    branches: ["master", "dev"]
 
 permissions:
   checks: write
