@@ -1,9 +1,7 @@
-import mimetypes
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
-import anyio
 from fastapi import (
     APIRouter,
     Depends,
@@ -14,7 +12,6 @@ from fastapi import (
     status,
     UploadFile,
 )
-from fastapi.responses import FileResponse
 
 from bioscopeai_core.app.auth.permissions import require_role
 from bioscopeai_core.app.crud.image import get_image_crud, ImageCRUD
@@ -28,6 +25,10 @@ from bioscopeai_core.app.schemas.image import (
 from bioscopeai_core.app.serializers.image import (
     get_image_serializer,
     ImageSerializer,
+)
+from bioscopeai_core.app.services.storage_service import (
+    get_storage_service,
+    StorageService,
 )
 
 
@@ -158,40 +159,66 @@ async def delete_image(
 
 
 @image_router.get(
-    "/{image_id}/file",
+    "/{image_id}/preview",
     status_code=status.HTTP_200_OK,
-    responses={
-        200: {
-            "content": {"image/*": {}},
-            "description": "Returns the image file associated with the given image ID",
-        },
-        404: {"description": "Image or file not found"},
-    },
+    response_model=dict[str, Any],
 )
-async def get_image_file(
+async def get_image_preview_url(
     image_id: UUID,
+    user: Annotated[User, Depends(require_role(UserRole.ANALYST.value))],
     image_crud: Annotated[ImageCRUD, Depends(get_image_crud)],
-    download: Annotated[bool, Query(description="Force download of the file")] = False,
-) -> FileResponse:
-    """Retrieve the image file associated with the given image ID.
-    Set `download=True` to force file download."""
-
+    storage_service: Annotated[StorageService, Depends(get_storage_service)],
+    expires_in: Annotated[
+        int, Query(ge=60, le=604800, description="URL expiry time in seconds")
+    ] = 3600,  # Default 1 hour
+) -> dict[str, Any]:
+    """Get a presigned URL to preview/display the image file inline."""
     image = await image_crud.get_by_id(image_id)
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
 
-    if not await anyio.Path(image.filepath).exists():
-        raise HTTPException(status_code=404, detail="Image file not found on server")
-
-    mime_type, _ = mimetypes.guess_type(image.filepath)
-    mime_type = mime_type or "application/octet-stream"
-
-    disposition = "attachment" if download else "inline"
-    headers = {"Content-Disposition": f'{disposition}; filename="{image.filename}"'}
-
-    return FileResponse(
-        path=image.filepath,
-        media_type=mime_type,
-        filename=image.filename,
-        headers=headers,
+    # Generate presigned URL with inline disposition
+    url = storage_service.s3_client.generate_presigned_url(
+        "get_object",
+        Params={
+            "Bucket": storage_service.default_bucket,
+            "Key": image.filepath,
+            "ResponseContentDisposition": "inline",
+        },
+        ExpiresIn=expires_in,
     )
+
+    return {"url": url, "expires_in": expires_in, "filename": image.filename}
+
+
+@image_router.get(
+    "/{image_id}/download",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+)
+async def get_image_download_url(
+    image_id: UUID,
+    user: Annotated[User, Depends(require_role(UserRole.ANALYST.value))],
+    image_crud: Annotated[ImageCRUD, Depends(get_image_crud)],
+    storage_service: Annotated[StorageService, Depends(get_storage_service)],
+    expires_in: Annotated[
+        int, Query(ge=60, le=604800, description="URL expiry time in seconds")
+    ] = 300,  # Default 5 minutes (shorter for downloads)
+) -> dict[str, Any]:
+    """Get a presigned URL to download the image file."""
+    image = await image_crud.get_by_id(image_id)
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    # Generate presigned URL with attachment disposition
+    url = storage_service.s3_client.generate_presigned_url(
+        "get_object",
+        Params={
+            "Bucket": storage_service.default_bucket,
+            "Key": image.filepath,
+            "ResponseContentDisposition": f'attachment; filename="{image.filename}"',
+        },
+        ExpiresIn=expires_in,
+    )
+
+    return {"url": url, "expires_in": expires_in, "filename": image.filename}
