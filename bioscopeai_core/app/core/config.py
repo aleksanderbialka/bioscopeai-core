@@ -72,6 +72,14 @@ class ImageSettings(BaseSettings):
     MAX_FILE_SIZE: int = 10 * 1024 * 1024
 
 
+class MinIOSettings(BaseSettings):
+    ENDPOINT_URL: str
+    ACCESS_KEY: str
+    SECRET_KEY: SecretStr
+    USE_SSL: bool = False
+    DEFAULT_BUCKET: str
+
+
 class KafkaSettings(BaseSettings):
     BOOTSTRAP_SERVERS: str
 
@@ -98,6 +106,7 @@ class Settings(BaseSettings):
     sentry: SentrySettings
     auth: AuthSettings
     image: ImageSettings
+    minio: MinIOSettings
     kafka: KafkaSettings
 
     model_config = SettingsConfigDict(
