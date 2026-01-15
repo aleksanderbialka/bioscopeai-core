@@ -24,7 +24,7 @@ class ClassificationOut(BaseModel):
     id: UUID
     dataset_id: UUID | None
     image_id: UUID | None
-    model_name: str
+    model_name: str | None
     status: ClassificationStatus
     created_by_id: UUID
     created_at: datetime

@@ -9,6 +9,7 @@ from starlette.types import Lifespan
 
 from bioscopeai_core.app.api import api_router
 from bioscopeai_core.app.core import settings, setup_logger
+from bioscopeai_core.app.core.s3_client import ensure_bucket_exists
 from bioscopeai_core.app.kafka.consumers.result_consumer import (
     get_classification_result_consumer,
 )
@@ -52,6 +53,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     await init_db()
     await classification_job_producer.initialize()
     await classification_result_consumer.start_consuming()
+    ensure_bucket_exists()
     logger.info("Application startup complete.")
     yield
     logger.info("Shutting down application...")

@@ -40,6 +40,13 @@ image:
     - ".png"
   MAX_FILE_SIZE: 10485760  # 10 MB
 
+minio:
+  ENDPOINT_URL: "http://localhost:9000"
+  ACCESS_KEY: "access_key"
+  SECRET_KEY: "secret_key"
+  USE_SSL: false
+  DEFAULT_BUCKET: "bioscopeai-images"
+
 kafka:
   BOOTSTRAP_SERVERS: "localhost:9092"
   CLASSIFICATION_JOBS_TOPIC: ""
