@@ -7,6 +7,7 @@ from bioscopeai_core.app.auth.permissions import require_role
 from bioscopeai_core.app.crud.users import get_users_crud, UsersCRUD
 from bioscopeai_core.app.models import User, UserRole
 from bioscopeai_core.app.schemas import UserOut
+from bioscopeai_core.app.schemas.users.users import UserUpdateAdmin, UserUpdateMe
 
 
 users_router = APIRouter()
@@ -44,3 +45,29 @@ async def get_user_by_id(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     return UserOut.model_validate(target_user)
+
+
+@users_router.patch(
+    "/users/{user_id}", response_model=UserOut, status_code=status.HTTP_200_OK
+)
+async def update_user_by_id(
+    user_id: UUID,
+    user_update: UserUpdateMe | UserUpdateAdmin,
+    user: Annotated[User, Depends(require_role(UserRole.VIEWER.value))],
+    users_crud: Annotated[UsersCRUD, Depends(get_users_crud)],
+) -> UserOut:
+    """Update user profile.
+    - Users can update their own profile with safe fields only
+    - Admins can update any user including role and status
+    """
+    updated_user = await users_crud.update_user(user_id, user_update, actor=user)
+    return UserOut.model_validate(updated_user)
+
+
+@users_router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user_by_id(
+    user_id: UUID,
+    user: Annotated[User, Depends(require_role(UserRole.ADMIN.value))],
+    users_crud: Annotated[UsersCRUD, Depends(get_users_crud)],
+) -> None:
+    await users_crud.delete_by_id(user_id)
