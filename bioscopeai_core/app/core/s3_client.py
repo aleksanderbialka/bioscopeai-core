@@ -13,9 +13,14 @@ from bioscopeai_core.app.core.config import settings
 @lru_cache(maxsize=1)
 def get_s3_client() -> Any:
     """Get a cached S3 client instance configured for MinIO."""
+    endpoint_url: str = settings.minio.ENDPOINT_URL
+    if endpoint_url and not endpoint_url.startswith(("http://", "https://")):
+        protocol = "https://" if settings.minio.USE_SSL else "http://"
+        endpoint_url = f"{protocol}{endpoint_url}"
+
     return boto3.client(
         "s3",
-        endpoint_url=settings.minio.ENDPOINT_URL,
+        endpoint_url=endpoint_url,
         aws_access_key_id=settings.minio.ACCESS_KEY,
         aws_secret_access_key=settings.minio.SECRET_KEY.get_secret_value(),
     )

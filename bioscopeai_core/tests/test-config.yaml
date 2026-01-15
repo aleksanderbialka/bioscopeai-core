@@ -74,7 +74,7 @@ image:
   MAX_FILE_SIZE: 10485760
 
 minio:
-  ENDPOINT_URL: "localhost:9000"
+  ENDPOINT_URL: "http://localhost:9000"
   ACCESS_KEY: "minioadmin"
   SECRET_KEY: "minioadmin"
   USE_SSL: false
