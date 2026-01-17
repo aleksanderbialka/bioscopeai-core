@@ -7,9 +7,11 @@ from .auth import (
     rotate_refresh_token,
 )
 from .permissions import get_user_from_jwt, verify_login
+from .service_user import ServiceUser
 
 
 __all__ = [
+    "ServiceUser",
     "create_access_token",
     "generate_refresh_token",
     "get_user_from_jwt",

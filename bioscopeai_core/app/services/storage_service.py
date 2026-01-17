@@ -25,6 +25,17 @@ class StorageService:
         parts = filename.rsplit(".", 1)
         return f".{parts[1]}" if len(parts) > 1 else ""
 
+    @staticmethod
+    def fix_presigned_url(url: str) -> str:
+        """Replace internal Docker endpoint with public URL in presigned URLs."""
+        if not settings.minio.PUBLIC_URL:
+            return url
+        internal_endpoint: str = settings.minio.ENDPOINT_URL
+        if not internal_endpoint.startswith(("http://", "https://")):
+            protocol = "https://" if settings.minio.USE_SSL else "http://"
+            internal_endpoint = f"{protocol}{internal_endpoint}"
+        return url.replace(internal_endpoint, settings.minio.PUBLIC_URL)
+
     async def upload_file(
         self,
         file: UploadFile,
