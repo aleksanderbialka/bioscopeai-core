@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+from typing import Any
 from uuid import UUID
 
 from bioscopeai_core.app.crud.base import BaseCRUD
@@ -47,6 +49,24 @@ class ClassificationResultCRUD(BaseCRUD[ClassificationResult]):
 
     async def get_by_image(self, image_id: UUID) -> list[ClassificationResult]:
         return await self.get_filtered(image_id=image_id)
+
+    async def get_today_statistics(self) -> dict[str, Any]:
+        date_range: datetime = datetime.now() - timedelta(days=1)
+        classification_results: list[ClassificationResult] = await self.model.filter(
+            created_at__gte=date_range,
+        ).order_by("-created_at")
+        count: int = len(classification_results)
+        confidence: float = (
+            sum(result.confidence for result in classification_results) / count
+            if count > 0
+            else 0.0
+        )
+        last_10_results: list[ClassificationResult] = classification_results[:10]
+        return {
+            "classified_last_24_hours": count,
+            "average_confidence": confidence,
+            "last_10_results": last_10_results,
+        }
 
 
 def get_classification_result_crud() -> ClassificationResultCRUD:
