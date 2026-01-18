@@ -120,11 +120,11 @@
 │                             ENUMERATIONS                                    │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  UserRole:                                                                  │
-│    - ADMIN (Level 4)                                                        │
-│    - RESEARCHER (Level 3)                                                   │
-│    - ANALYST (Level 2)                                                      │
-│    - VIEWER (Level 1)                                                       │
+│  UserRole (Role Hierarchy by Privilege Level):                             │
+│    - ADMIN (Level 4) - Full system access and user management              │
+│    - RESEARCHER (Level 3) - Can perform analysis and manage datasets       │
+│    - ANALYST (Level 2) - Can perform analysis on assigned datasets         │
+│    - VIEWER (Level 1) - Read-only access to data                           │
 │                                                                             │
 │  UserStatus:                                                                │
 │    - ACTIVE                                                                 │

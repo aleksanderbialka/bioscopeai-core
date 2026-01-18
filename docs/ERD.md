@@ -192,10 +192,10 @@ Individual classification predictions with confidence scores.
 
 ### UserRole
 ```python
-ADMIN = "admin"         # Level 4 - Full system access
-RESEARCHER = "researcher"  # Level 3 - Can perform analysis
-ANALYST = "analyst"     # Level 2 - Can perform analysis
-VIEWER = "viewer"       # Level 1 - Read-only access
+ADMIN = "admin"         # Level 4 - Full system access and user management
+RESEARCHER = "researcher"  # Level 3 - Can perform analysis and manage datasets
+ANALYST = "analyst"     # Level 2 - Can perform analysis on assigned datasets
+VIEWER = "viewer"       # Level 1 - Read-only access to data
 ```
 
 ### UserStatus

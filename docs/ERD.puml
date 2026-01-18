@@ -144,8 +144,9 @@ Classification ||--o{ ClassificationResult : "produces"
 
 note right of User
   Core authentication entity
-  Supports role hierarchy:
+  Supports role hierarchy (by privilege level):
   ADMIN > RESEARCHER > ANALYST > VIEWER
+  (where > means "higher privilege than")
 end note
 
 note right of Classification
