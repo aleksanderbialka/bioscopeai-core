@@ -101,13 +101,13 @@
          │           │                                                 └─── produces (1:N) ─┐
          │           │                                                                      │
          │           │                                                                      │
-         ▼           │                                                                      ▼
+         ▼                                                                                        ▼
 ┌──────────────────────────┐                                           ┌────────────────────────┐
 │       Device             │                                           │  ClassificationResult  │
 │──────────────────────────│                                           │────────────────────────│
 │ PK: id (UUID)            │                                           │ PK: id (UUID)          │
 │     name                 │                                           │ FK: image_id           │
-│ UK: hostname             │────────── has (1:N) ──────────────────────│ FK: classification_id  │
+│ UK: hostname             │                                           │ FK: classification_id  │
 │     location             │                                           │     label              │
 │     firmware_version     │                                           │     confidence         │
 │     is_online            │                                           │     model_name         │
