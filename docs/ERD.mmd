@@ -1,0 +1,96 @@
+```mermaid
+erDiagram
+    User ||--o{ RefreshToken : "has"
+    User ||--o{ Dataset : "owns"
+    User ||--o{ Image : "uploads"
+    User ||--o{ Classification : "creates"
+    Device ||--o{ Image : "captures"
+    Dataset ||--o{ Image : "contains"
+    Dataset ||--o{ Classification : "has"
+    Image ||--o{ Classification : "analyzed_by"
+    Image ||--o{ ClassificationResult : "has"
+    Classification ||--o{ ClassificationResult : "produces"
+
+    User {
+        uuid id PK
+        string email UK "Unique, indexed"
+        string username UK "Unique, indexed"
+        string password_hash
+        string first_name
+        string last_name
+        enum role "ADMIN, RESEARCHER, ANALYST, VIEWER"
+        enum status "ACTIVE, INACTIVE, SUSPENDED, PENDING"
+        string institution "nullable"
+        string department "nullable"
+        string phone "nullable"
+        boolean is_verified
+        boolean is_superuser
+        datetime created_at
+        datetime updated_at
+        datetime last_login "nullable"
+        string password_reset_token "nullable"
+        datetime password_reset_expires "nullable"
+        string email_verification_token "nullable"
+        datetime email_verified_at "nullable"
+    }
+
+    RefreshToken {
+        uuid id PK
+        uuid user_id FK
+        string token_hash UK "Unique"
+        datetime exp "Indexed"
+        datetime iat
+        boolean revoked "Indexed"
+    }
+
+    Device {
+        uuid id PK
+        string name
+        string hostname UK "Unique"
+        string location "nullable"
+        string firmware_version "nullable"
+        boolean is_online
+        datetime last_seen "nullable"
+        datetime registered_at
+    }
+
+    Dataset {
+        uuid id PK
+        string name
+        text description "nullable"
+        uuid owner_id FK
+        datetime created_at
+    }
+
+    Image {
+        uuid id PK
+        string filename
+        string filepath
+        uuid dataset_id FK
+        uuid uploaded_by_id FK
+        uuid device_id FK "nullable"
+        datetime uploaded_at
+        boolean analyzed
+    }
+
+    Classification {
+        uuid id PK
+        uuid image_id FK "nullable"
+        uuid dataset_id FK "nullable"
+        string model_name "nullable"
+        enum status "PENDING, RUNNING, COMPLETED, FAILED"
+        uuid created_by_id FK
+        datetime created_at
+        datetime updated_at
+    }
+
+    ClassificationResult {
+        uuid id PK
+        uuid image_id FK
+        uuid classification_id FK "nullable"
+        string label
+        float confidence
+        string model_name "nullable"
+        datetime created_at
+    }
+```

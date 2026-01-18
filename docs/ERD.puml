@@ -1,0 +1,162 @@
+@startuml BioScopeAI_ERD
+
+!define Table(name,desc) class name as "desc" << (T,#FFAAAA) >>
+!define primary_key(x) <b><u>x</u></b>
+!define foreign_key(x) <i>x</i>
+!define unique(x) <u>x</u>
+
+hide methods
+hide stereotypes
+
+' Entities
+
+entity User {
+  primary_key(id): UUID
+  --
+  unique(email): VARCHAR(255)
+  unique(username): VARCHAR(50)
+  password_hash: VARCHAR(255)
+  first_name: VARCHAR(50)
+  last_name: VARCHAR(50)
+  role: ENUM (UserRole)
+  status: ENUM (UserStatus)
+  institution: VARCHAR(50) [NULL]
+  department: VARCHAR(50) [NULL]
+  phone: VARCHAR(20) [NULL]
+  is_verified: BOOLEAN
+  is_superuser: BOOLEAN
+  created_at: DATETIME
+  updated_at: DATETIME
+  last_login: DATETIME [NULL]
+  password_reset_token: VARCHAR(255) [NULL]
+  password_reset_expires: DATETIME [NULL]
+  email_verification_token: VARCHAR(255) [NULL]
+  email_verified_at: DATETIME [NULL]
+}
+
+entity RefreshToken {
+  primary_key(id): UUID
+  --
+  foreign_key(user_id): UUID
+  unique(token_hash): VARCHAR(255)
+  exp: DATETIME
+  iat: DATETIME
+  revoked: BOOLEAN
+}
+
+entity Device {
+  primary_key(id): UUID
+  --
+  name: VARCHAR(255)
+  unique(hostname): VARCHAR(255)
+  location: VARCHAR(255) [NULL]
+  firmware_version: VARCHAR(50) [NULL]
+  is_online: BOOLEAN
+  last_seen: DATETIME [NULL]
+  registered_at: DATETIME
+}
+
+entity Dataset {
+  primary_key(id): UUID
+  --
+  name: VARCHAR(255)
+  description: TEXT [NULL]
+  foreign_key(owner_id): UUID
+  created_at: DATETIME
+}
+
+entity Image {
+  primary_key(id): UUID
+  --
+  filename: VARCHAR(255)
+  filepath: VARCHAR(512)
+  foreign_key(dataset_id): UUID
+  foreign_key(uploaded_by_id): UUID
+  foreign_key(device_id): UUID [NULL]
+  uploaded_at: DATETIME
+  analyzed: BOOLEAN
+}
+
+entity Classification {
+  primary_key(id): UUID
+  --
+  foreign_key(image_id): UUID [NULL]
+  foreign_key(dataset_id): UUID [NULL]
+  model_name: VARCHAR(100) [NULL]
+  status: ENUM (ClassificationStatus)
+  foreign_key(created_by_id): UUID
+  created_at: DATETIME
+  updated_at: DATETIME
+}
+
+entity ClassificationResult {
+  primary_key(id): UUID
+  --
+  foreign_key(image_id): UUID
+  foreign_key(classification_id): UUID [NULL]
+  label: VARCHAR(100)
+  confidence: FLOAT
+  model_name: VARCHAR(100) [NULL]
+  created_at: DATETIME
+}
+
+' Enumerations
+
+enum UserRole {
+  ADMIN
+  RESEARCHER
+  ANALYST
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum ClassificationStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+' Relationships
+
+User ||--o{ RefreshToken : "has"
+User ||--o{ Dataset : "owns"
+User ||--o{ Image : "uploads"
+User ||--o{ Classification : "creates"
+
+Device ||--o{ Image : "captures"
+
+Dataset ||--o{ Image : "contains"
+Dataset ||--o{ Classification : "has"
+
+Image ||--o{ Classification : "analyzed_by"
+Image ||--o{ ClassificationResult : "has"
+
+Classification ||--o{ ClassificationResult : "produces"
+
+' Notes
+
+note right of User
+  Core authentication entity
+  Supports role hierarchy:
+  ADMIN > RESEARCHER > ANALYST > VIEWER
+end note
+
+note right of Classification
+  Can be applied to:
+  - Individual images
+  - Entire datasets
+end note
+
+note right of ClassificationResult
+  Stores individual predictions
+  with confidence scores
+end note
+
+@enduml
