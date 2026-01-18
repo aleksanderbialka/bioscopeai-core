@@ -1,0 +1,185 @@
+# BioScopeAI Core - Database Schema (ASCII Format)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         BioScopeAI Core - ERD                               │
+│                    Entity Relationship Diagram (ASCII)                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────┐
+│         User             │
+│──────────────────────────│
+│ PK: id (UUID)            │
+│ UK: email                │
+│ UK: username             │
+│    password_hash         │
+│    first_name            │
+│    last_name             │
+│    role (ENUM)           │
+│    status (ENUM)         │
+│    institution           │
+│    department            │
+│    phone                 │
+│    is_verified           │
+│    is_superuser          │
+│    created_at            │
+│    updated_at            │
+│    last_login            │
+│    password_reset_token  │
+│    ...                   │
+└──────────────────────────┘
+         │
+         ├──────────── has (1:N) ───────────┐
+         │                                  │
+         │                                  ▼
+         │                      ┌────────────────────────┐
+         │                      │    RefreshToken        │
+         │                      │────────────────────────│
+         │                      │ PK: id (UUID)          │
+         │                      │ FK: user_id            │
+         │                      │ UK: token_hash         │
+         │                      │     exp                │
+         │                      │     iat                │
+         │                      │     revoked            │
+         │                      └────────────────────────┘
+         │
+         ├──────────── owns (1:N) ──────────┐
+         │                                  │
+         │                                  ▼
+         │                      ┌────────────────────────┐
+         │                      │       Dataset          │
+         │                      │────────────────────────│
+         │                      │ PK: id (UUID)          │
+         │                      │     name               │
+         │                      │     description        │
+         │                      │ FK: owner_id           │
+         │                      │     created_at         │
+         │                      └────────────────────────┘
+         │                                  │
+         │                                  ├─── contains (1:N) ──┐
+         │                                  │                     │
+         │                                  ├─── has (1:N) ───────┼────┐
+         │                                  │                     │    │
+         ├──────────── uploads (1:N) ──────┼─────────────────────┘    │
+         │                                  │                          │
+         │                                  ▼                          │
+         │                      ┌────────────────────────┐             │
+         │                      │        Image           │             │
+         │                      │────────────────────────│             │
+         │                      │ PK: id (UUID)          │             │
+         │           ┌──────────│     filename           │             │
+         │           │          │     filepath           │             │
+         │           │          │ FK: dataset_id         │             │
+         │           │          │ FK: uploaded_by_id     │             │
+         │           │          │ FK: device_id          │             │
+         │           │          │     uploaded_at        │             │
+         │           │          │     analyzed           │             │
+         │           │          └────────────────────────┘             │
+         │           │                      │                          │
+         │           │                      ├─── analyzed_by (1:N) ───┼────┐
+         │           │                      │                          │    │
+         │           │                      └─── has (1:N) ────────────┼────┼────┐
+         │           │                                                 │    │    │
+         │           │  captures (1:N)                                 │    │    │
+         │           │                                                 │    │    │
+         │           │                                                 ▼    ▼    │
+         │           │                                    ┌────────────────────────┐
+         │           │                                    │   Classification       │
+         │           │                                    │────────────────────────│
+         │           │                                    │ PK: id (UUID)          │
+         │           │                                    │ FK: image_id           │
+         │           │                              ┌─────│ FK: dataset_id         │
+         │           │                              │     │     model_name         │
+         │           │                              │     │     status (ENUM)      │
+         │           │                              │     │ FK: created_by_id      │
+         │           │                              │     │     created_at         │
+         │           │                              │     │     updated_at         │
+         │           │                              │     └────────────────────────┘
+         │           │                              │                 │
+         ├───────────┼──────────── creates (1:N) ───┘                 │
+         │           │                                                 │
+         │           │                                                 └─── produces (1:N) ─┐
+         │           │                                                                      │
+         │           │                                                                      │
+         ▼           │                                                                      ▼
+┌──────────────────────────┐                                           ┌────────────────────────┐
+│       Device             │                                           │  ClassificationResult  │
+│──────────────────────────│                                           │────────────────────────│
+│ PK: id (UUID)            │                                           │ PK: id (UUID)          │
+│     name                 │                                           │ FK: image_id           │
+│ UK: hostname             │────────── has (1:N) ──────────────────────│ FK: classification_id  │
+│     location             │                                           │     label              │
+│     firmware_version     │                                           │     confidence         │
+│     is_online            │                                           │     model_name         │
+│     last_seen            │                                           │     created_at         │
+│     registered_at        │                                           └────────────────────────┘
+└──────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             ENUMERATIONS                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  UserRole:                                                                  │
+│    - ADMIN (Level 4)                                                        │
+│    - RESEARCHER (Level 3)                                                   │
+│    - ANALYST (Level 2)                                                      │
+│    - VIEWER (Level 1)                                                       │
+│                                                                             │
+│  UserStatus:                                                                │
+│    - ACTIVE                                                                 │
+│    - INACTIVE                                                               │
+│    - SUSPENDED                                                              │
+│    - PENDING                                                                │
+│                                                                             │
+│  ClassificationStatus:                                                      │
+│    - PENDING                                                                │
+│    - RUNNING                                                                │
+│    - COMPLETED                                                              │
+│    - FAILED                                                                 │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        KEY RELATIONSHIPS                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. User → RefreshToken (1:N)                                               │
+│     A user can have multiple active refresh tokens                          │
+│                                                                             │
+│  2. User → Dataset (1:N - owner)                                            │
+│     A user owns multiple datasets                                           │
+│                                                                             │
+│  3. User → Image (1:N - uploaded_by)                                        │
+│     A user can upload multiple images                                       │
+│                                                                             │
+│  4. User → Classification (1:N - created_by)                                │
+│     A user can create multiple classification tasks                         │
+│                                                                             │
+│  5. Device → Image (1:N, optional)                                          │
+│     A device can capture multiple images                                    │
+│                                                                             │
+│  6. Dataset → Image (1:N)                                                   │
+│     A dataset contains multiple images                                      │
+│                                                                             │
+│  7. Dataset → Classification (1:N, optional)                                │
+│     A dataset can have multiple classification tasks                        │
+│                                                                             │
+│  8. Image → Classification (1:N, optional)                                  │
+│     An image can be analyzed by multiple classification tasks               │
+│                                                                             │
+│  9. Image → ClassificationResult (1:N)                                      │
+│     An image has multiple classification results                            │
+│                                                                             │
+│  10. Classification → ClassificationResult (1:N, optional)                  │
+│      A classification task produces multiple results                        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Legend:
+  PK = Primary Key
+  FK = Foreign Key
+  UK = Unique Key
+  1:N = One-to-Many Relationship
+```
