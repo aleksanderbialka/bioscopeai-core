@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -99,3 +99,24 @@ async def get_results_for_image(
     """Return all results for a specific image."""
     results = await crud.get_by_image(image_id)
     return serializer.to_out_list(results)
+
+
+@classification_result_router.get(
+    "/today/statistics",
+    response_model=dict[str, Any],
+    status_code=status.HTTP_200_OK,
+)
+async def count_results_today(
+    user: Annotated[User, Depends(require_role(UserRole.ANALYST.value))],
+    crud: Annotated[ClassificationResultCRUD, Depends(get_classification_result_crud)],
+    serializer: Annotated[
+        ClassificationResultSerializer,
+        Depends(get_classification_result_serializer),
+    ],
+) -> dict[str, Any]:
+    """Count classification results created today."""
+    statistics = await crud.get_today_statistics()
+    statistics["last_10_results"] = serializer.to_out_list(
+        statistics["last_10_results"]
+    )
+    return statistics

@@ -74,6 +74,7 @@ class ImageSettings(BaseSettings):
 
 class MinIOSettings(BaseSettings):
     ENDPOINT_URL: str
+    PUBLIC_URL: str | None = None
     ACCESS_KEY: str
     SECRET_KEY: SecretStr
     USE_SSL: bool = False

@@ -170,7 +170,7 @@ async def get_image_preview_url(
     storage_service: Annotated[StorageService, Depends(get_storage_service)],
     expires_in: Annotated[
         int, Query(ge=60, le=604800, description="URL expiry time in seconds")
-    ] = 3600,  # Default 1 hour
+    ] = 3600,  # 1 hour
 ) -> dict[str, Any]:
     """Get a presigned URL to preview/display the image file inline."""
     image = await image_crud.get_by_id(image_id)
@@ -187,6 +187,7 @@ async def get_image_preview_url(
         },
         ExpiresIn=expires_in,
     )
+    url = storage_service.fix_presigned_url(url)
 
     return {"url": url, "expires_in": expires_in, "filename": image.filename}
 
@@ -203,7 +204,7 @@ async def get_image_download_url(
     storage_service: Annotated[StorageService, Depends(get_storage_service)],
     expires_in: Annotated[
         int, Query(ge=60, le=604800, description="URL expiry time in seconds")
-    ] = 300,  # Default 5 minutes (shorter for downloads)
+    ] = 300,  # 5 minutes
 ) -> dict[str, Any]:
     """Get a presigned URL to download the image file."""
     image = await image_crud.get_by_id(image_id)
@@ -220,5 +221,7 @@ async def get_image_download_url(
         },
         ExpiresIn=expires_in,
     )
+    if user.role != UserRole.SERVICE:
+        url = storage_service.fix_presigned_url(url)
 
     return {"url": url, "expires_in": expires_in, "filename": image.filename}
