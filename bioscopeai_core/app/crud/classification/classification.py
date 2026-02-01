@@ -35,7 +35,7 @@ class ClassificationCRUD(BaseCRUD[Classification]):
         )
         try:
             await classification_job_producer.send_event(
-                device_id=str(created_by_id),
+                device_id=None,
                 message={
                     "classification_id": str(obj.id),
                     "dataset_id": str(create_in.dataset_id)

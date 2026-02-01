@@ -12,10 +12,13 @@ class ClassificationJobProducer(BaseKafkaProducer):
         super().__init__()
         self._topic_prefix: str = self.kafka_settings.CLASSIFICATION_JOBS_TOPIC
 
-    async def send_event(self, device_id: str, message: dict[str, Any]) -> None:
+    async def send_event(self, device_id: str | None, message: dict[str, Any]) -> None:
         """Send a classification job message to the specified Kafka topic."""
         if self._producer:
-            self._topic = f"{self._topic_prefix}-{device_id}"
+            if device_id:
+                self._topic = f"{self._topic_prefix}-{device_id}"
+            else:
+                self._topic = f"{self._topic_prefix}"
             try:
                 await self._producer.send_and_wait(
                     topic=self._topic,
