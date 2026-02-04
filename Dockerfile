@@ -37,6 +37,7 @@ COPY ./pyproject.toml ./poetry.lock ./README.md /var/www/bioscopeai-core/app/bio
 COPY ./bioscopeai_core /var/www/bioscopeai-core/app/bioscopeai-core/bioscopeai_core
 COPY ./docs /var/www/bioscopeai-core/app/bioscopeai-core/docs
 COPY ./scripts /var/www/bioscopeai-core/app/bioscopeai-core/scripts
+COPY ./migrations /var/www/bioscopeai-core/app/bioscopeai-core/migrations
 RUN chmod +x /var/www/bioscopeai-core/app/bioscopeai-core/scripts/*.sh
 RUN ls -la /var/www/bioscopeai-core/app/bioscopeai-core/*
 
