@@ -148,7 +148,7 @@ async def update_image(
 @image_router.delete("/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_image(
     image_id: UUID,
-    user: Annotated[User, Depends(require_role(UserRole.ADMIN.value))],
+    user: Annotated[User, Depends(require_role(UserRole.RESEARCHER.value))],
     image_crud: Annotated[ImageCRUD, Depends(get_image_crud)],
 ) -> None:
     """Delete the image with the given ID."""

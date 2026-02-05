@@ -113,7 +113,7 @@ async def get_classification(
 )
 async def delete_classification(
     classification_id: UUID,
-    user: Annotated[User, Depends(require_role(UserRole.ADMIN.value))],
+    user: Annotated[User, Depends(require_role(UserRole.RESEARCHER.value))],
     crud: Annotated[ClassificationCRUD, Depends(get_classification_crud)],
 ) -> None:
     """Delete a classification job."""
